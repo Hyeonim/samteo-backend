@@ -1,4 +1,4 @@
-package com.samteo.service;
+package com.samteo.domain.health.service;
 
 import org.springframework.stereotype.Service;
 
@@ -6,6 +6,6 @@ import org.springframework.stereotype.Service;
 public class HealthService {
 
     public String getStatus() {
-        return "Samteo 서버가 정상 동작 중입니다.";
+        return "Samteo server is running.";
     }
 }
