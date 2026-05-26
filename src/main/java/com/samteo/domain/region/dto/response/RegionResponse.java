@@ -16,6 +16,10 @@ public class RegionResponse {
     private String id;
     private String name;
     private String summary;
+    private String desc;
+    private String badge;
+    private String badgeType;
+    private String bg;
     private int hotPlaceScore;
     private int housingCostScore;
     private BigDecimal centerLatitude;
@@ -28,6 +32,10 @@ public class RegionResponse {
                 .id(region.getId())
                 .name(region.getName())
                 .summary(region.getSummary())
+                .desc(region.getSummary())
+                .badge(region.getHotPlaceScore() >= 90 ? "BEST" : "RECOMMENDED")
+                .badgeType(region.getHotPlaceScore() >= 90 ? "blue" : "green")
+                .bg("linear-gradient(160deg, #1e3a5f, #2d5a8e)")
                 .hotPlaceScore(region.getHotPlaceScore())
                 .housingCostScore(region.getHousingCostScore())
                 .centerLatitude(region.getCenterLatitude())
