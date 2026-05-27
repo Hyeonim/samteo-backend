@@ -11,9 +11,11 @@ import com.samteo.domain.planner.dto.response.PlannerBootstrapResponse;
 import com.samteo.domain.planner.dto.response.PlannerResponse;
 import com.samteo.domain.planner.entity.Accommodation;
 import com.samteo.domain.planner.entity.Job;
-import com.samteo.domain.planner.repository.DummyPlannerRepository;
+import com.samteo.domain.planner.repository.AccommodationRepository;
+import com.samteo.domain.planner.repository.JobRepository;
 import com.samteo.domain.region.dto.response.RegionResponse;
 import com.samteo.domain.region.entity.Region;
+import com.samteo.domain.region.repository.RegionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -29,11 +31,13 @@ public class PlannerService {
     private static final int DEFAULT_FOOD_COST = 220000;
     private static final int DEFAULT_EXTRA_COST = 70000;
 
-    private final DummyPlannerRepository repository;
+    private final RegionRepository regionRepository;
+    private final JobRepository jobRepository;
+    private final AccommodationRepository accommodationRepository;
 
     public PlannerBootstrapResponse getBootstrapData() {
         return PlannerBootstrapResponse.builder()
-                .regions(repository.findRegions().stream().map(RegionResponse::from).toList())
+                .regions(regionRepository.findAll().stream().map(RegionResponse::from).toList())
                 .jobs(getJobs(null))
                 .accommodations(getAccommodations(null))
                 .mapProvider(getMapProvider())
@@ -41,13 +45,17 @@ public class PlannerService {
     }
 
     public List<JobResponse> getJobs(String regionId) {
-        return repository.findJobs(regionId).stream()
+        List<Job> jobs = regionId == null ? jobRepository.findAll() : jobRepository.findByRegionId(regionId);
+        return jobs.stream()
                 .map(JobResponse::from)
                 .toList();
     }
 
     public List<AccommodationResponse> getAccommodations(String regionId) {
-        return repository.findAccommodations(regionId).stream()
+        List<Accommodation> accommodations = regionId == null
+                ? accommodationRepository.findAllByOrderByCommuteMinutesAsc()
+                : accommodationRepository.findByRegionIdOrderByCommuteMinutesAsc(regionId);
+        return accommodations.stream()
                 .map(AccommodationResponse::from)
                 .toList();
     }
@@ -88,7 +96,7 @@ public class PlannerService {
     }
 
     public PlannerResponse createPlanner(PlannerCreateRequest request) {
-        Region region = repository.findRegion(request.getRegionId())
+        Region region = regionRepository.findById(request.getRegionId())
                 .orElseThrow(() -> new IllegalArgumentException("Unknown regionId: " + request.getRegionId()));
         List<Job> jobs = request.getJobIds().stream().map(this::findJob).toList();
         if (jobs.isEmpty()) {
@@ -152,12 +160,12 @@ public class PlannerService {
     }
 
     private Job findJob(String jobId) {
-        return repository.findJob(jobId)
+        return jobRepository.findById(jobId)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown jobId: " + jobId));
     }
 
     private Accommodation findAccommodation(String accommodationId) {
-        return repository.findAccommodation(accommodationId)
+        return accommodationRepository.findById(accommodationId)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown accommodationId: " + accommodationId));
     }
 

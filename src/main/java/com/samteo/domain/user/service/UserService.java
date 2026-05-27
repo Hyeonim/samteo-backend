@@ -4,7 +4,7 @@ import com.samteo.domain.user.dto.request.LoginRequest;
 import com.samteo.domain.user.dto.response.LoginResponse;
 import com.samteo.domain.user.dto.response.UserResponse;
 import com.samteo.domain.user.entity.User;
-import com.samteo.domain.user.repository.DummyUserRepository;
+import com.samteo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +17,7 @@ public class UserService {
 
     private static final long DUMMY_EXPIRES_IN = 3600L;
 
-    private final DummyUserRepository userRepository;
+    private final UserRepository userRepository;
 
     public LoginResponse login(LoginRequest request) {
         String email = request.getEmail() == null || request.getEmail().isBlank()
@@ -30,7 +30,7 @@ public class UserService {
                 ? "KAKAO"
                 : request.getProvider().toUpperCase();
 
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseGet(() -> userRepository.save(User.builder()
                         .email(email)
                         .nickname(nickname)

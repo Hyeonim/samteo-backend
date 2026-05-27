@@ -1,9 +1,9 @@
 package com.samteo.domain.region.service;
 
-import com.samteo.domain.planner.repository.DummyPlannerRepository;
 import com.samteo.domain.region.dto.request.RegionRecommendationRequest;
 import com.samteo.domain.region.dto.response.RegionResponse;
 import com.samteo.domain.region.entity.Region;
+import com.samteo.domain.region.repository.RegionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +15,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RegionService {
 
-    private final DummyPlannerRepository repository;
+    private final RegionRepository regionRepository;
     private final SecureRandom random = new SecureRandom();
 
     public List<RegionResponse> getRegions() {
-        return repository.findRegions().stream()
+        return regionRepository.findAll().stream()
                 .map(RegionResponse::from)
                 .toList();
     }
@@ -28,7 +28,7 @@ public class RegionService {
         String option = request == null || request.getOption() == null ? "random" : request.getOption();
 
         if ("district".equalsIgnoreCase(option) && request.getDistrict() != null) {
-            return repository.findRegions().stream()
+            return regionRepository.findAll().stream()
                     .filter(region -> region.getName().equals(request.getDistrict()) || region.getId().equals(request.getDistrict()))
                     .map(RegionResponse::from)
                     .toList();
@@ -36,7 +36,7 @@ public class RegionService {
 
         if ("needs".equalsIgnoreCase(option)) {
             List<String> needs = request.getNeeds() == null ? List.of() : request.getNeeds();
-            return repository.findRegions().stream()
+            return regionRepository.findAll().stream()
                     .sorted(Comparator.comparingInt((Region region) -> scoreNeeds(region.getTags(), needs)).reversed())
                     .limit(3)
                     .map(RegionResponse::from)
