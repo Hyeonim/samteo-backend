@@ -1,7 +1,7 @@
-package com.samteo.controller;
+package com.samteo.domain.health.controller;
 
-import com.samteo.dto.response.ApiResponse;
-import com.samteo.service.HealthService;
+import com.samteo.global.response.ApiResponse;
+import com.samteo.domain.health.service.HealthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

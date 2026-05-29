@@ -5,6 +5,25 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+### Local Gradle ###
+gradle.properties
+
+### Logs ###
+logs/
+*.log
+*.log.*
+
+### Environment ###
+.env
+.env.*
+!.env.example
+application-local.properties
+application-*.local.properties
+
+### OS ###
+.DS_Store
+Thumbs.db
+
 ### STS ###
 .apt_generated
 .classpath
@@ -35,3 +54,13 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Runtime / temp ###
+tmp/
+temp/
+*.pid
+*.seed
+*.stackdump
+
+### Dummy ###
+/src/main/resources/reference/
