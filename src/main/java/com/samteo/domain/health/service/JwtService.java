@@ -1,4 +1,4 @@
-package com.samteo.service;
+package com.samteo.domain.health.service;
 
 import com.samteo.entity.User;
 import io.jsonwebtoken.Claims;
