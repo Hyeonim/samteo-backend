@@ -1,6 +1,6 @@
-package com.samteo.exception;
+package com.samteo.global.exception;
 
-import com.samteo.dto.response.ApiResponse;
+import com.samteo.global.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,6 +18,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("서버 내부 오류가 발생했습니다."));
+                .body(ApiResponse.error("Internal server error."));
     }
 }

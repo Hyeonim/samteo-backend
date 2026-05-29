@@ -1,4 +1,4 @@
-package com.samteo.dto.response;
+package com.samteo.global.response;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
