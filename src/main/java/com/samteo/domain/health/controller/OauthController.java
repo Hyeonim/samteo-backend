@@ -1,9 +1,9 @@
-package com.samteo.controller;
+package com.samteo.domain.health.controller;
 
-import com.samteo.dto.response.AuthResponse;
-import com.samteo.service.AuthService;
-import com.samteo.service.KakaoOAuthService;
-import com.samteo.service.KakaoOAuthService.KakaoUserInfo;
+import com.samteo.global.response.AuthResponse;
+import com.samteo.domain.health.service.AuthService;
+import com.samteo.domain.health.service.KakaoOAuthService;
+import com.samteo.domain.health.service.KakaoOAuthService.KakaoUserInfo;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

@@ -1,8 +1,8 @@
-package com.samteo.service;
+package com.samteo.domain.health.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.samteo.dto.response.JobResponse;
+import com.samteo.global.response.JobResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

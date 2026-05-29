@@ -14,8 +14,8 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
-@Entity
-@Table(name = "users")
+@Entity(name = "UserLegacy")
+@Table(name = "users_legacy")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class User {

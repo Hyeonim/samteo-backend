@@ -1,8 +1,8 @@
-package com.samteo.service;
+package com.samteo.domain.health.service;
 
 import com.samteo.dto.request.LoginRequest;
 import com.samteo.dto.request.RegisterRequest;
-import com.samteo.dto.response.AuthResponse;
+import com.samteo.global.response.AuthResponse;
 import com.samteo.entity.User;
 import com.samteo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

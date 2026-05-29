@@ -1,4 +1,4 @@
-package com.samteo.config;
+package com.samteo.global.config;
 
 import com.samteo.filter.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;

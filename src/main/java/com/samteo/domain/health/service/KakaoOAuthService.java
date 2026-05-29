@@ -1,4 +1,4 @@
-package com.samteo.service;
+package com.samteo.domain.health.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;

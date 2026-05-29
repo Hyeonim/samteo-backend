@@ -7,7 +7,7 @@ import com.samteo.domain.planner.repository.JobRepository;
 import com.samteo.domain.region.entity.Region;
 import com.samteo.domain.region.repository.RegionRepository;
 import com.samteo.domain.user.entity.User;
-import com.samteo.domain.user.repository.UserRepository;
+import com.samteo.domain.user.repository.UserLegacyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -23,7 +23,7 @@ public class DataInitializer {
     private final RegionRepository regionRepository;
     private final JobRepository jobRepository;
     private final AccommodationRepository accommodationRepository;
-    private final UserRepository userRepository;
+    private final UserLegacyRepository userRepository;
 
     @Bean
     public CommandLineRunner seedData() {

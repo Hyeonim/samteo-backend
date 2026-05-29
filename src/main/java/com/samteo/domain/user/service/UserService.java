@@ -4,7 +4,7 @@ import com.samteo.domain.user.dto.request.LoginRequest;
 import com.samteo.domain.user.dto.response.LoginResponse;
 import com.samteo.domain.user.dto.response.UserResponse;
 import com.samteo.domain.user.entity.User;
-import com.samteo.domain.user.repository.UserRepository;
+import com.samteo.domain.user.repository.UserLegacyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +17,7 @@ public class UserService {
 
     private static final long DUMMY_EXPIRES_IN = 3600L;
 
-    private final UserRepository userRepository;
+    private final UserLegacyRepository userRepository;
 
     public LoginResponse login(LoginRequest request) {
         String email = request.getEmail() == null || request.getEmail().isBlank()

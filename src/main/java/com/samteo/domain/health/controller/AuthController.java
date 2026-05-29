@@ -1,9 +1,9 @@
-package com.samteo.controller;
+package com.samteo.domain.health.controller;
 
 import com.samteo.dto.request.LoginRequest;
 import com.samteo.dto.request.RegisterRequest;
-import com.samteo.dto.response.AuthResponse;
-import com.samteo.service.AuthService;
+import com.samteo.global.response.AuthResponse;
+import com.samteo.domain.health.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

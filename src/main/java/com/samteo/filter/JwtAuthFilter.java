@@ -1,6 +1,6 @@
 package com.samteo.filter;
 
-import com.samteo.service.JwtService;
+import com.samteo.domain.health.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
