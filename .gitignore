@@ -19,6 +19,9 @@ logs/
 !.env.example
 application-local.properties
 application-*.local.properties
+src/main/resources/application-secret.properties
+src/main/resources/application-secrete.properties
+src/main/resources/application-sercrete.properties
 
 ### OS ###
 .DS_Store
