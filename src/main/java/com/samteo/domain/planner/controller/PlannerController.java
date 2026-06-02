@@ -2,13 +2,17 @@ package com.samteo.domain.planner.controller;
 
 import com.samteo.domain.planner.service.PlannerService;
 import com.samteo.domain.planner.dto.request.BudgetSimulationRequest;
+import com.samteo.domain.planner.dto.request.CommuteRouteRequest;
 import com.samteo.domain.planner.dto.request.PlannerCreateRequest;
+import com.samteo.domain.planner.dto.request.TransitRouteRequest;
 import com.samteo.domain.planner.dto.response.AccommodationResponse;
 import com.samteo.domain.planner.dto.response.BudgetSimulationResponse;
 import com.samteo.domain.planner.dto.response.JobResponse;
 import com.samteo.domain.planner.dto.response.MapProviderResponse;
 import com.samteo.domain.planner.dto.response.PlannerBootstrapResponse;
 import com.samteo.domain.planner.dto.response.PlannerResponse;
+import com.samteo.domain.planner.dto.response.TransitRouteResponse;
+import com.samteo.domain.planner.service.OdsayTransitService;
 import com.samteo.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +31,7 @@ import java.util.List;
 public class PlannerController {
 
     private final PlannerService plannerService;
+    private final OdsayTransitService odsayTransitService;
 
     @GetMapping("/bootstrap")
     public ResponseEntity<ApiResponse<PlannerBootstrapResponse>> getBootstrapData() {
@@ -57,6 +62,20 @@ public class PlannerController {
             @RequestBody BudgetSimulationRequest request
     ) {
         return ResponseEntity.ok(ApiResponse.success(plannerService.simulateBudget(request)));
+    }
+
+    @PostMapping("/transit-routes")
+    public ResponseEntity<ApiResponse<TransitRouteResponse>> searchTransitRoutes(
+            @RequestBody TransitRouteRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(odsayTransitService.searchTransitRoutes(request)));
+    }
+
+    @PostMapping("/commute-route")
+    public ResponseEntity<ApiResponse<TransitRouteResponse>> searchCommuteRoute(
+            @RequestBody CommuteRouteRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(odsayTransitService.searchCommuteRoute(request)));
     }
 
     @PostMapping
