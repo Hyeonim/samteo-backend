@@ -64,11 +64,12 @@ public class PlannerService {
         return MapProviderResponse.builder()
                 .provider("KAKAO")
                 .javascriptSdkUrl("https://dapi.kakao.com/v2/maps/sdk.js")
-                .enabledFeatures(List.of("marker", "route-preview", "place-search"))
+                .enabledFeatures(List.of("marker", "route-preview", "place-search", "public-transit-routing"))
                 .integrationNotes(List.of(
-                        "TODO Kakao Map API key injection is required at frontend runtime.",
-                        "TODO Only map rendering/search should call external APIs in this service flow.",
-                        "Jobs, accommodations, and bus/route datasets are expected to be preloaded into DB later."
+                        "Kakao Map should render the map and provide picked coordinates.",
+                        "ODsay route API is called by the backend so the ODsay key is not exposed to the frontend.",
+                        "Use POST /api/planner/transit-routes for arbitrary anchor coordinates.",
+                        "Use POST /api/planner/commute-route for accommodation-to-job routing."
                 ))
                 .build();
     }
@@ -90,7 +91,7 @@ public class PlannerService {
                 .balance(balance)
                 .notes(List.of(
                         "Transport and food costs use user input first.",
-                        "Recommended-route transport calculation will be enabled after Kakao/ODsay map integration."
+                        "Recommended public-transit routes are available through the Kakao/ODsay routing endpoints."
                 ))
                 .build();
     }
