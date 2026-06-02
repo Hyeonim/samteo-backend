@@ -27,6 +27,8 @@ public class AccommodationResponse {
     private String pos;
     private String posType;
     private String bg;
+    private String color;
+    private Integer rank;
     private BigDecimal latitude;
     private BigDecimal longitude;
     private BigDecimal lat;
@@ -46,16 +48,18 @@ public class AccommodationResponse {
                 .deposit(accommodation.getDeposit())
                 .distanceKm(accommodation.getDistanceKm())
                 .commuteMinutes(accommodation.getCommuteMinutes())
-                .location(accommodation.getAddress() + " / commute " + accommodation.getCommuteMinutes() + " min")
-                .pos("balance depends on selected job")
+                .location(accommodation.getDistrict() + " · " + accommodation.getAddress())
+                .pos("▲ 가처분 계산 중")
                 .posType("pos")
                 .bg("linear-gradient(135deg,#1e3a5f,#2d5a8e)")
+                .color(accommodation.getColor() != null ? accommodation.getColor() : "#3B82F6")
+                .rank(accommodation.getRank())
                 .latitude(accommodation.getLatitude())
                 .longitude(accommodation.getLongitude())
                 .lat(accommodation.getLatitude())
                 .lng(accommodation.getLongitude())
                 .tags(accommodation.getTags())
-                .source("HR_DUMMY")
+                .source("DB")
                 .build();
     }
 }
