@@ -138,13 +138,11 @@ public class OdsayTransitService {
                     .body(String.class);
 
             JsonNode raw = objectMapper.readTree(body);
-            JsonNode error = raw.path("error");
-            if (!error.isMissingNode()) {
-                String message = error.path("message").asText("ODsay route search failed.");
-                throw new IllegalArgumentException("ODsay error: " + message);
-            }
 
-            List<TransitRouteOptionResponse> routes = parseRoutes(raw.path("result").path("path"));
+            // ODsay 에러도 raw에 담아 200으로 반환 — 프론트에서 error 필드 확인
+            List<TransitRouteOptionResponse> routes = raw.path("error").isMissingNode()
+                    ? parseRoutes(raw.path("result").path("path"))
+                    : List.of();
             return TransitRouteResponse.builder()
                     .provider("ODSAY")
                     .origin(origin)
