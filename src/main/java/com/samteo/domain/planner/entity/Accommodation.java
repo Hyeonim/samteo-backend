@@ -58,4 +58,9 @@ public class Accommodation {
     @CollectionTable(name = "accommodation_tags", joinColumns = @JoinColumn(name = "accommodation_id"))
     @Column(name = "tag", nullable = false)
     private List<String> tags;
+
+    @Column(length = 30)
+    private String color;
+
+    private Integer rank;
 }

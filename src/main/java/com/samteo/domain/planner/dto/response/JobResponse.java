@@ -33,6 +33,7 @@ public class JobResponse {
     private String unit;
     private String sub;
     private String emoji;
+    private boolean best;
     private BigDecimal latitude;
     private BigDecimal longitude;
     private BigDecimal lat;
@@ -41,6 +42,7 @@ public class JobResponse {
     private String source;
 
     public static JobResponse from(Job job) {
+        String priceLabel = "₩" + String.format("%,.0f", job.getMonthlySalary() / 10000.0) + "만";
         return JobResponse.builder()
                 .id(job.getId())
                 .name(job.getTitle())
@@ -48,7 +50,7 @@ public class JobResponse {
                 .company(job.getCompany())
                 .regionId(job.getRegionId())
                 .district(job.getDistrict())
-                .region(job.getDistrict())
+                .region(job.getRegionId())
                 .type(job.getCategory())
                 .category(job.getCategory())
                 .employmentType(job.getEmploymentType())
@@ -56,18 +58,19 @@ public class JobResponse {
                 .salary(job.getMonthlySalary())
                 .workingDays(job.getWorkingDays())
                 .commuteMinutes(job.getCommuteMinutes())
-                .desc(job.getCompany() + " / " + job.getWorkingDays())
-                .location(job.getDistrict() + " / commute " + job.getCommuteMinutes() + " min")
-                .priceLabel("KRW " + job.getMonthlySalary())
-                .unit("/month")
-                .sub("dummy job data")
-                .emoji("JOB")
+                .desc(job.getTitle())
+                .location("📍 " + job.getDistrict())
+                .priceLabel(priceLabel)
+                .unit("/월")
+                .sub("단기 알바")
+                .emoji(job.getEmoji() != null ? job.getEmoji() : "💼")
+                .best(job.isBest())
                 .latitude(job.getLatitude())
                 .longitude(job.getLongitude())
                 .lat(job.getLatitude())
                 .lng(job.getLongitude())
                 .tags(job.getTags())
-                .source("HR_DUMMY")
+                .source("DB")
                 .build();
     }
 }

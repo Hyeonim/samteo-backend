@@ -15,6 +15,7 @@ import com.samteo.domain.planner.dto.response.TransitRouteResponse;
 import com.samteo.domain.planner.service.OdsayTransitService;
 import com.samteo.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +33,9 @@ public class PlannerController {
 
     private final PlannerService plannerService;
     private final OdsayTransitService odsayTransitService;
+
+    @Value("${external.odsay.api-key:}")
+    private String odsayApiKey;
 
     @GetMapping("/bootstrap")
     public ResponseEntity<ApiResponse<PlannerBootstrapResponse>> getBootstrapData() {
@@ -76,6 +80,22 @@ public class PlannerController {
             @RequestBody CommuteRouteRequest request
     ) {
         return ResponseEntity.ok(ApiResponse.success(odsayTransitService.searchCommuteRoute(request)));
+    }
+
+    @GetMapping("/load-lane")
+    public ResponseEntity<String> loadLane(@RequestParam String mapObject) {
+        try {
+            String encoded = java.net.URLEncoder.encode("0:0@" + mapObject, java.nio.charset.StandardCharsets.UTF_8);
+            java.net.URI uri = java.net.URI.create(
+                "https://api.odsay.com/v1/api/loadLane?mapObject=" + encoded + "&apiKey=" + odsayApiKey
+            );
+            java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+            java.net.http.HttpRequest req = java.net.http.HttpRequest.newBuilder(uri).GET().build();
+            java.net.http.HttpResponse<String> resp = client.send(req, java.net.http.HttpResponse.BodyHandlers.ofString());
+            return ResponseEntity.ok().header("Content-Type", "application/json").body(resp.body());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("{\"error\":\"loadLane failed\"}");
+        }
     }
 
     @PostMapping

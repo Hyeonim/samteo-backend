@@ -63,4 +63,9 @@ public class Job {
     @CollectionTable(name = "job_tags", joinColumns = @JoinColumn(name = "job_id"))
     @Column(name = "tag", nullable = false)
     private List<String> tags;
+
+    @Column(length = 10)
+    private String emoji;
+
+    private boolean best;
 }
