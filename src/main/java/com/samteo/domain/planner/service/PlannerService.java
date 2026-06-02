@@ -18,6 +18,7 @@ import com.samteo.domain.region.entity.Region;
 import com.samteo.domain.region.repository.RegionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -44,6 +45,7 @@ public class PlannerService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public List<JobResponse> getJobs(String regionId) {
         List<Job> jobs = regionId == null ? jobRepository.findAll() : jobRepository.findByRegionId(regionId);
         return jobs.stream()
@@ -51,6 +53,7 @@ public class PlannerService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<AccommodationResponse> getAccommodations(String regionId) {
         List<Accommodation> accommodations = regionId == null
                 ? accommodationRepository.findAllByOrderByCommuteMinutesAsc()
