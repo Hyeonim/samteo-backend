@@ -28,7 +28,10 @@ jobs:
           java-version: 21
 
       - name: Normalize Gradle config for CI
-        run: sed -i '/^org.gradle.java.home=/d' gradle.properties
+        run: |
+          if [ -f gradle.properties ]; then
+            sed -i '/^org.gradle.java.home=/d' gradle.properties
+          fi
 
       - name: Build
         run: ./gradlew clean bootJar -x test
