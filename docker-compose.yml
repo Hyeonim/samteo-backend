@@ -8,9 +8,10 @@ services:
       MARIADB_PASSWORD: samteo
       MARIADB_ROOT_PASSWORD: root
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - samteo_local_mariadb:/var/lib/mysql
+      - ./src/main/resources/schema/mariadb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
