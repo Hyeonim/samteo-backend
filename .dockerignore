@@ -1,0 +1,16 @@
+.git
+.github
+.gradle
+.idea
+build
+out
+logs
+tmp
+temp
+*.log
+*.iml
+.env
+.env.*
+!*.env.example
+src/main/resources/application-secret.properties
+src/main/resources/application-*.local.properties

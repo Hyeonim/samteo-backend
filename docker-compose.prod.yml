@@ -1,0 +1,29 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: samteo-caddy
+    depends_on:
+      - app
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:-www.samteo.org}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+  app:
+    image: ${APP_IMAGE:-ghcr.io/hyeonim/samteo-backend:latest}
+    container_name: samteo-backend
+    env_file:
+      - .env
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
