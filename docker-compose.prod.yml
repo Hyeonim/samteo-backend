@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   caddy:
     image: caddy:2-alpine
@@ -14,6 +16,9 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     restart: unless-stopped
+    # 👇 Caddy를 외부 네트워크에 연결
+    networks:
+      - samteo-net
 
   app:
     image: ${APP_IMAGE:-ghcr.io/hyeonim/samteo-backend:latest}
@@ -23,7 +28,15 @@ services:
     expose:
       - "8080"
     restart: unless-stopped
+    # 👇 백엔드 앱을 외부 네트워크에 연결
+    networks:
+      - samteo-net
 
 volumes:
   caddy_data:
   caddy_config:
+
+# 👇 우리가 터미널에서 수동으로 만든 samteo-net을 연동하겠다는 선언
+networks:
+  samteo-net:
+    external: true
