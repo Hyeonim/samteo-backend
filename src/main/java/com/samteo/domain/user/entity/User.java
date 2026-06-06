@@ -14,6 +14,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.OffsetDateTime;
 
+/**
+ * 공용 {@code users} 테이블에 저장되는 애플리케이션 사용자 엔티티이다.
+ */
 @Entity
 @Table(name = "users")
 @Getter
@@ -53,6 +56,14 @@ public class User {
         updatedAt = OffsetDateTime.now();
     }
 
+    /**
+     * 해시된 비밀번호를 포함하는 로컬 계정 엔티티를 생성한다.
+     *
+     * @param email 계정 이메일
+     * @param name 표시 이름
+     * @param passwordHash 해시된 비밀번호
+     * @return 로컬 사용자 엔티티
+     */
     public static User createLocal(String email, String name, String passwordHash) {
         User user = new User();
         user.email = email;
@@ -62,6 +73,15 @@ public class User {
         return user;
     }
 
+    /**
+     * OAuth 기반 사용자 계정 엔티티를 생성한다.
+     *
+     * @param email 계정 이메일
+     * @param name 표시 이름
+     * @param provider OAuth 제공자 이름
+     * @param providerId 제공자가 발급한 사용자 고유 식별자
+     * @return OAuth 사용자 엔티티
+     */
     public static User createOAuth(String email, String name, String provider, String providerId) {
         User user = new User();
         user.email = email;

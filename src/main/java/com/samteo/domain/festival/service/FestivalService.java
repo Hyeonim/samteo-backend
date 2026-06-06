@@ -13,6 +13,9 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * TourAPI 축제 API와 연동하여 결과를 클라이언트용 형식으로 정규화한다.
+ */
 @Slf4j
 @Service
 public class FestivalService {
@@ -31,6 +34,13 @@ public class FestivalService {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * 지정한 연월의 축제 데이터를 조회하고 응답 DTO 목록으로 변환한다.
+     *
+     * @param year 조회 대상 연도
+     * @param month 조회 대상 월
+     * @return 정규화된 축제 목록
+     */
     public List<FestivalResponse> getFestivals(int year, int month) {
         YearMonth yearMonth = YearMonth.of(year, month);
         String startDate = String.format("%d%02d01", year, month);
