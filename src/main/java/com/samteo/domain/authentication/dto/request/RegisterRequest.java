@@ -1,4 +1,4 @@
-package com.samteo.domain.user.dto.request;
+package com.samteo.domain.authentication.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,10 +7,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginRequest {
+public class RegisterRequest {
 
-    private String provider;
-    private String providerToken;
     private String email;
-    private String nickname;
+    private String password;
+    private String name;
 }

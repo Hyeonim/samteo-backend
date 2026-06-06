@@ -1,6 +1,6 @@
-package com.samteo.domain.health.service;
+package com.samteo.domain.authentication.service;
 
-import com.samteo.entity.User;
+import com.samteo.domain.user.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

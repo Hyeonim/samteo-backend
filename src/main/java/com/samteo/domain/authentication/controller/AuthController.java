@@ -1,12 +1,15 @@
-package com.samteo.domain.health.controller;
+package com.samteo.domain.authentication.controller;
 
-import com.samteo.dto.request.LoginRequest;
-import com.samteo.dto.request.RegisterRequest;
-import com.samteo.global.response.AuthResponse;
-import com.samteo.domain.health.service.AuthService;
+import com.samteo.domain.authentication.dto.request.LoginRequest;
+import com.samteo.domain.authentication.dto.request.RegisterRequest;
+import com.samteo.domain.authentication.dto.response.AuthResponse;
+import com.samteo.domain.authentication.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")

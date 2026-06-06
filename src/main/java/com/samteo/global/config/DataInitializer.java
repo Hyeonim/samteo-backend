@@ -7,11 +7,12 @@ import com.samteo.domain.planner.repository.JobRepository;
 import com.samteo.domain.region.entity.Region;
 import com.samteo.domain.region.repository.RegionRepository;
 import com.samteo.domain.user.entity.User;
-import com.samteo.domain.user.repository.UserLegacyRepository;
+import com.samteo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,7 +24,7 @@ public class DataInitializer {
     private final RegionRepository regionRepository;
     private final JobRepository jobRepository;
     private final AccommodationRepository accommodationRepository;
-    private final UserLegacyRepository userRepository;
+    private final UserRepository userRepository;
 
     @Bean
     public CommandLineRunner seedData() {
@@ -238,13 +239,11 @@ public class DataInitializer {
             return;
         }
 
-        userRepository.save(User.builder()
-                .email("demo@samteo.local")
-                .nickname("Samteo Demo")
-                .provider("LOCAL")
-                .providerId("demo")
-                .profileImageUrl(null)
-                .role("USER")
-                .build());
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        userRepository.save(User.createLocal(
+                "demo@samteo.local",
+                "Samteo Demo",
+                passwordEncoder.encode("1234")
+        ));
     }
 }

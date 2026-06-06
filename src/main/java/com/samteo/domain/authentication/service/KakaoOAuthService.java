@@ -1,7 +1,13 @@
-package com.samteo.domain.health.service;
+package com.samteo.domain.authentication.service;
 
+import com.samteo.domain.authentication.dto.response.KakaoUserInfo;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -24,8 +30,6 @@ public class KakaoOAuthService {
 
     @Value("${kakao.redirect.uri}")
     private String redirectUri;
-
-    public record KakaoUserInfo(Long id, String email, String nickname) {}
 
     public String getAccessToken(String code) {
         HttpHeaders headers = new HttpHeaders();
@@ -58,7 +62,7 @@ public class KakaoOAuthService {
         }
 
         if (response == null || !response.containsKey("access_token")) {
-            throw new RuntimeException("카카오 토큰 발급 실패");
+            throw new RuntimeException("Kakao token request failed.");
         }
         return (String) response.get("access_token");
     }
@@ -77,7 +81,9 @@ public class KakaoOAuthService {
                 Map.class);
 
         Map<String, Object> body = response.getBody();
-        if (body == null) throw new RuntimeException("카카오 유저 정보 조회 실패");
+        if (body == null) {
+            throw new RuntimeException("Kakao user info request failed.");
+        }
 
         Long id = ((Number) body.get("id")).longValue();
         Map<String, Object> kakaoAccount = body.get("kakao_account") instanceof Map<?, ?>
@@ -89,7 +95,6 @@ public class KakaoOAuthService {
 
         String email = asString(kakaoAccount.get("email"));
         if (email == null || email.isBlank()) {
-            // Kakao email consent can be optional, so keep OAuth login working with a stable placeholder.
             email = "kakao_" + id + "@no-email.local";
         }
 

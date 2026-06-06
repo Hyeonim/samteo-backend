@@ -56,12 +56,37 @@ GHCR_USERNAME=<github username>
 GHCR_TOKEN=<github token with read:packages>
 ```
 
-If deploy logs show `ghcr.io/...: denied`, the EC2 host could not authenticate to GitHub Container Registry. In that case:
+If the GHCR package is public, `GHCR_USERNAME` and `GHCR_TOKEN` are not required.
+
+## GHCR denied issue
+
+Symptom:
 
 ```text
-1. Verify GHCR_USERNAME and GHCR_TOKEN are set in GitHub repository secrets.
-2. Use a classic PAT or fine-grained token that can read the package.
-3. Ensure the token owner has access to the private package, or make the package public.
+Error response from daemon:
+Head "https://ghcr.io/v2/hyeonim/samteo-backend/manifests/latest": denied: denied
+```
+
+Cause:
+
+```text
+The EC2 host had stale or invalid ghcr.io login credentials saved in Docker.
+Because Docker tried the saved credentials first, pull failed even though the package itself was public.
+```
+
+How we verified it:
+
+```bash
+docker logout ghcr.io
+docker pull ghcr.io/hyeonim/samteo-backend:latest
+```
+
+Resolution:
+
+```text
+1. Remove the stale GHCR login on EC2 with `docker logout ghcr.io`.
+2. For public images, do not use GHCR secrets in the deploy workflow.
+3. Run `docker logout ghcr.io || true` before `docker compose pull` to avoid the same issue later.
 ```
 
 After `.env` exists on the server, push to `main` or run the `Deploy` workflow manually.
