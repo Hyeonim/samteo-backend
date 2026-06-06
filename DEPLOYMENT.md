@@ -56,6 +56,14 @@ GHCR_USERNAME=<github username>
 GHCR_TOKEN=<github token with read:packages>
 ```
 
+If deploy logs show `ghcr.io/...: denied`, the EC2 host could not authenticate to GitHub Container Registry. In that case:
+
+```text
+1. Verify GHCR_USERNAME and GHCR_TOKEN are set in GitHub repository secrets.
+2. Use a classic PAT or fine-grained token that can read the package.
+3. Ensure the token owner has access to the private package, or make the package public.
+```
+
 After `.env` exists on the server, push to `main` or run the `Deploy` workflow manually.
 
 ## DNS and security groups
