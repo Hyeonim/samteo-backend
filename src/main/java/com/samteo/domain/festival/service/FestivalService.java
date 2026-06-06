@@ -1,12 +1,13 @@
-package com.samteo.domain.health.service;
+package com.samteo.domain.festival.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.samteo.global.response.FestivalResponse;
+import com.samteo.domain.festival.dto.response.FestivalResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+
 import java.net.URI;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -57,8 +58,8 @@ public class FestivalService {
 
             return parseItems(items);
         } catch (Exception e) {
-            log.error("TourAPI 호출 실패: {}", e.getMessage());
-            throw new RuntimeException("축제 정보를 불러오는 데 실패했습니다.");
+            log.error("TourAPI call failed: {}", e.getMessage());
+            throw new RuntimeException("Failed to load festivals.");
         }
     }
 
@@ -87,12 +88,16 @@ public class FestivalService {
     }
 
     private String formatDate(String raw) {
-        if (raw == null || raw.length() != 8) return raw;
+        if (raw == null || raw.length() != 8) {
+            return raw;
+        }
         return raw.substring(0, 4) + "-" + raw.substring(4, 6) + "-" + raw.substring(6, 8);
     }
 
     private String extractRegion(String addr) {
-        if (addr == null || addr.isBlank()) return null;
+        if (addr == null || addr.isBlank()) {
+            return null;
+        }
         String first = addr.trim().split("\\s+")[0];
         for (String suffix : List.of("특별자치도", "특별자치시", "특별시", "광역시", "도")) {
             if (first.endsWith(suffix)) {
