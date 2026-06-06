@@ -1,12 +1,13 @@
-package com.samteo.domain.health.service;
+package com.samteo.domain.job.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.samteo.global.response.JobResponse;
+import com.samteo.domain.job.dto.response.JobResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,8 +50,8 @@ public class JobService {
 
             return parseItems(items);
         } catch (Exception e) {
-            log.error("관광인 API 호출 실패: {}", e.getMessage());
-            throw new RuntimeException("채용 공고를 불러오는 데 실패했습니다.");
+            log.error("Gwanwangin API call failed: {}", e.getMessage());
+            throw new RuntimeException("Failed to load jobs.");
         }
     }
 
@@ -84,13 +85,17 @@ public class JobService {
 
     private Integer intOf(JsonNode node, String field) {
         JsonNode value = node.get(field);
-        if (value == null || value.isNull()) return null;
+        if (value == null || value.isNull()) {
+            return null;
+        }
         String digits = value.asText().replaceAll("[^0-9]", "");
         return digits.isEmpty() ? null : Integer.parseInt(digits);
     }
 
     private String extractDate(String raw) {
-        if (raw == null || raw.isBlank()) return null;
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
         return raw.length() >= 10 ? raw.substring(0, 10) : raw;
     }
 }

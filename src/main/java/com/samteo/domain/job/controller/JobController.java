@@ -1,11 +1,14 @@
-package com.samteo.domain.health.controller;
+package com.samteo.domain.job.controller;
 
+import com.samteo.domain.job.dto.response.JobResponse;
+import com.samteo.domain.job.service.JobService;
 import com.samteo.global.response.ApiResponse;
-import com.samteo.global.response.JobResponse;
-import com.samteo.domain.health.service.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
