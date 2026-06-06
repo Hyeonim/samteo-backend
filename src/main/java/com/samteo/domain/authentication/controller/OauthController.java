@@ -1,9 +1,9 @@
-package com.samteo.domain.health.controller;
+package com.samteo.domain.authentication.controller;
 
-import com.samteo.global.response.AuthResponse;
-import com.samteo.domain.health.service.AuthService;
-import com.samteo.domain.health.service.KakaoOAuthService;
-import com.samteo.domain.health.service.KakaoOAuthService.KakaoUserInfo;
+import com.samteo.domain.authentication.dto.response.AuthResponse;
+import com.samteo.domain.authentication.dto.response.KakaoUserInfo;
+import com.samteo.domain.authentication.service.AuthService;
+import com.samteo.domain.authentication.service.KakaoOAuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,8 +27,12 @@ public class OauthController {
     public void kakaoCallback(@RequestParam("code") String code, HttpServletResponse response) throws IOException {
         String accessToken = kakaoOAuthService.getAccessToken(code);
         KakaoUserInfo userInfo = kakaoOAuthService.getUserInfo(accessToken);
-        AuthResponse auth = authService.loginOrRegisterOAuth("kakao",
-                String.valueOf(userInfo.id()), userInfo.email(), userInfo.nickname());
-        response.sendRedirect(frontendUrl + "/oauth/callback?token=" + auth.token());
+        AuthResponse auth = authService.loginOrRegisterOAuth(
+                "kakao",
+                String.valueOf(userInfo.getId()),
+                userInfo.getEmail(),
+                userInfo.getNickname()
+        );
+        response.sendRedirect(frontendUrl + "/oauth/callback?token=" + auth.getToken());
     }
 }

@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `USER` (
   `email` VARCHAR(255) NOT NULL,
   `name` VARCHAR(100) NOT NULL,
   `profile_image` VARCHAR(500),
-  `provider` ENUM('local','kakao','naver','google') NOT NULL DEFAULT 'local',
+  `provider` ENUM('local','kakao') NOT NULL DEFAULT 'local',
   `provider_id` VARCHAR(255),
   `password_hash` VARCHAR(255),
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

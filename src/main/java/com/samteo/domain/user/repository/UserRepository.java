@@ -1,4 +1,15 @@
 package com.samteo.domain.user.repository;
 
-// 이 파일은 UserLegacyRepository로 대체되었습니다.
-// Bean 이름 충돌 방지를 위해 비워둡니다.
+import com.samteo.domain.user.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    Optional<User> findByEmail(String email);
+
+    Optional<User> findByEmailIgnoreCase(String email);
+
+    Optional<User> findByProviderAndProviderId(String provider, String providerId);
+}

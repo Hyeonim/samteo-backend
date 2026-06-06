@@ -10,21 +10,17 @@ import lombok.Getter;
 @AllArgsConstructor
 public class UserResponse {
 
-    private Long id;
+    private Long userId;
     private String email;
-    private String nickname;
+    private String name;
     private String provider;
-    private String profileImageUrl;
-    private String role;
 
     public static UserResponse from(User user) {
         return UserResponse.builder()
-                .id(user.getId())
+                .userId(user.getUserId())
                 .email(user.getEmail())
-                .nickname(user.getNickname())
+                .name(user.getName())
                 .provider(user.getProvider())
-                .profileImageUrl(user.getProfileImageUrl())
-                .role(user.getRole())
                 .build();
     }
 }

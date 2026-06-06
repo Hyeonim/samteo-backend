@@ -1,10 +1,10 @@
-package com.samteo.domain.health.service;
+package com.samteo.domain.authentication.service;
 
-import com.samteo.dto.request.LoginRequest;
-import com.samteo.dto.request.RegisterRequest;
-import com.samteo.global.response.AuthResponse;
-import com.samteo.entity.User;
-import com.samteo.repository.UserRepository;
+import com.samteo.domain.authentication.dto.request.LoginRequest;
+import com.samteo.domain.authentication.dto.request.RegisterRequest;
+import com.samteo.domain.authentication.dto.response.AuthResponse;
+import com.samteo.domain.user.entity.User;
+import com.samteo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,21 +19,22 @@ public class AuthService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Transactional
-    public AuthResponse register(RegisterRequest req) {
-        if (userRepository.findByEmail(req.email()).isPresent()) {
-            throw new RuntimeException("이미 사용 중인 이메일입니다.");
+    public AuthResponse register(RegisterRequest request) {
+        if (userRepository.findByEmailIgnoreCase(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Email is already in use.");
         }
-        String hash = passwordEncoder.encode(req.password());
-        User user = userRepository.save(User.createLocal(req.email(), req.name(), hash));
+
+        String hash = passwordEncoder.encode(request.getPassword());
+        User user = userRepository.save(User.createLocal(request.getEmail(), request.getName(), hash));
         return toAuthResponse(user);
     }
 
     @Transactional(readOnly = true)
-    public AuthResponse login(LoginRequest req) {
-        User user = userRepository.findByEmail(req.email())
-                .orElseThrow(() -> new RuntimeException("이메일 또는 비밀번호가 올바르지 않습니다."));
-        if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
-            throw new RuntimeException("이메일 또는 비밀번호가 올바르지 않습니다.");
+    public AuthResponse login(LoginRequest request) {
+        User user = userRepository.findByEmailIgnoreCase(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Invalid email or password."));
+        if (user.getPasswordHash() == null || !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new RuntimeException("Invalid email or password.");
         }
         return toAuthResponse(user);
     }

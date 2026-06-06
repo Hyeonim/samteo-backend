@@ -5,40 +5,69 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.OffsetDateTime;
+
+@Entity
+@Table(name = "users")
 @Getter
-@Builder
-@Entity(name = "UserLegacy")
-@Table(name = "users_legacy")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "user_id")
+    private Long userId;
 
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false, length = 100)
-    private String nickname;
+    @Column(name = "name", nullable = false)
+    private String name;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "provider", nullable = false)
     private String provider;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "provider_id")
     private String providerId;
 
-    @Column(length = 500)
-    private String profileImageUrl;
+    @Column(name = "password_hash")
+    private String passwordHash;
 
-    @Column(nullable = false, length = 50)
-    private String role;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private OffsetDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = OffsetDateTime.now();
+        updatedAt = OffsetDateTime.now();
+    }
+
+    public static User createLocal(String email, String name, String passwordHash) {
+        User user = new User();
+        user.email = email;
+        user.name = name;
+        user.provider = "local";
+        user.passwordHash = passwordHash;
+        return user;
+    }
+
+    public static User createOAuth(String email, String name, String provider, String providerId) {
+        User user = new User();
+        user.email = email;
+        user.name = name;
+        user.provider = provider;
+        user.providerId = providerId;
+        return user;
+    }
 }
