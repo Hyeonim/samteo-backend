@@ -27,8 +27,9 @@ password: samteo
 MariaDB init scripts:
 
 ```text
-src/main/resources/schema/mariadb/01_schema.sql
-src/main/resources/schema/mariadb/02_seed.sql
+src/main/resources/schema/mariadb/00_drop.sql
+src/main/resources/schema/mariadb/01_create.sql
+src/main/resources/schema/mariadb/02_init.sql
 ```
 
 These scripts are mounted to:
