@@ -12,6 +12,9 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 관광 일자리 API와 연동하여 원본 응답을 서비스용 DTO로 정규화한다.
+ */
 @Slf4j
 @Service
 public class JobService {
@@ -30,6 +33,12 @@ public class JobService {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * 외부 API에서 채용 공고를 조회하고 응답 객체 목록으로 변환한다.
+     *
+     * @param size 외부 API에 요청할 공고 개수
+     * @return 정규화된 채용 공고 목록
+     */
     public List<JobResponse> getJobs(int size) {
         URI uri = URI.create(baseUrl + "/empmnInfoList"
                 + "?serviceKey=" + apiKey

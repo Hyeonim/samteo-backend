@@ -17,6 +17,9 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Collections;
 import java.util.Map;
 
+/**
+ * 카카오 OAuth 토큰 교환과 사용자 정보 조회를 담당하는 서비스이다.
+ */
 @Service
 public class KakaoOAuthService {
 
@@ -31,6 +34,12 @@ public class KakaoOAuthService {
     @Value("${kakao.redirect.uri}")
     private String redirectUri;
 
+    /**
+     * 카카오 인가 코드를 액세스 토큰으로 교환한다.
+     *
+     * @param code 카카오 인가 코드
+     * @return 카카오 액세스 토큰
+     */
     public String getAccessToken(String code) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -67,6 +76,12 @@ public class KakaoOAuthService {
         return (String) response.get("access_token");
     }
 
+    /**
+     * 액세스 토큰을 이용해 카카오 사용자 정보를 조회하고 내부 형식으로 정규화한다.
+     *
+     * @param accessToken 카카오 액세스 토큰
+     * @return 정규화된 카카오 사용자 정보
+     */
     @SuppressWarnings("unchecked")
     public KakaoUserInfo getUserInfo(String accessToken) {
         HttpHeaders headers = new HttpHeaders();
