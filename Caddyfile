@@ -1,3 +1,7 @@
+samteo.org {
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
+
 {$SITE_DOMAIN} {
-    reverse_proxy app:8080
+	reverse_proxy app:8080
 }
