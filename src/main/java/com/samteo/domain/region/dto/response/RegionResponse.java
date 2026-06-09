@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -28,6 +29,10 @@ public class RegionResponse {
     private List<String> recommendationReasons;
 
     public static RegionResponse from(Region region) {
+        List<String> tags = region.getTags() == null ? List.of() : new ArrayList<>(region.getTags());
+        List<String> recommendationReasons = region.getRecommendationReasons() == null
+                ? List.of()
+                : new ArrayList<>(region.getRecommendationReasons());
         return RegionResponse.builder()
                 .id(region.getId())
                 .name(region.getName())
@@ -40,8 +45,8 @@ public class RegionResponse {
                 .housingCostScore(region.getHousingCostScore())
                 .centerLatitude(region.getCenterLatitude())
                 .centerLongitude(region.getCenterLongitude())
-                .tags(region.getTags())
-                .recommendationReasons(region.getRecommendationReasons())
+                .tags(tags)
+                .recommendationReasons(recommendationReasons)
                 .build();
     }
 }

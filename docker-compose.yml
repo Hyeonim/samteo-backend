@@ -11,7 +11,11 @@ services:
       - "3307:3306"
     volumes:
       - samteo_local_mariadb:/var/lib/mysql
-      - ./src/main/resources/schema/mariadb:/docker-entrypoint-initdb.d:ro
+      - ./src/main/resources/schema/mariadb/00_drop.sql:/docker-entrypoint-initdb.d/00-drop.sql:ro
+      - ./src/main/resources/schema/mariadb/01_create.sql:/docker-entrypoint-initdb.d/01-create.sql:ro
+      - ./src/main/resources/schema/mariadb/02_init.sql:/docker-entrypoint-initdb.d/02-init.sql:ro
+      - ./src/main/resources/schema/mariadb/03_planner_create.sql:/docker-entrypoint-initdb.d/03-planner-create.sql:ro
+      - ./src/main/resources/schema/mariadb/04_planner_init.sql:/docker-entrypoint-initdb.d/04-planner-init.sql:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s

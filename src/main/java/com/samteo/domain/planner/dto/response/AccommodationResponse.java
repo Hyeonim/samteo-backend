@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -35,6 +36,7 @@ public class AccommodationResponse {
     private String source;
 
     public static AccommodationResponse from(Accommodation accommodation) {
+        List<String> tags = accommodation.getTags() == null ? List.of() : new ArrayList<>(accommodation.getTags());
         return AccommodationResponse.builder()
                 .id(accommodation.getId())
                 .name(accommodation.getName())
@@ -54,7 +56,7 @@ public class AccommodationResponse {
                 .longitude(accommodation.getLongitude())
                 .lat(accommodation.getLatitude())
                 .lng(accommodation.getLongitude())
-                .tags(accommodation.getTags())
+                .tags(tags)
                 .source("HR_DUMMY")
                 .build();
     }
