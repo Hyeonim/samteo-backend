@@ -48,16 +48,27 @@ public class AccommodationResponse {
                 .deposit(accommodation.getDeposit())
                 .distanceKm(accommodation.getDistanceKm())
                 .commuteMinutes(accommodation.getCommuteMinutes())
-                .location(accommodation.getAddress() + " / commute " + accommodation.getCommuteMinutes() + " min")
-                .pos("balance depends on selected job")
+                .location(accommodation.getAddress() + " / 이동 " + accommodation.getCommuteMinutes() + "분")
+                .pos("선택 일자리 기준 확인")
                 .posType("pos")
                 .bg("linear-gradient(135deg,#1e3a5f,#2d5a8e)")
                 .latitude(accommodation.getLatitude())
                 .longitude(accommodation.getLongitude())
                 .lat(accommodation.getLatitude())
                 .lng(accommodation.getLongitude())
-                .tags(tags)
+                .tags(tags.stream().map(AccommodationResponse::toKoreanTag).toList())
                 .source("HR_DUMMY")
                 .build();
+    }
+
+    private static String toKoreanTag(String tag) {
+        if (tag == null) return "";
+        return switch (tag) {
+            case "short-term" -> "단기 가능";
+            case "private-room" -> "개인실";
+            case "station" -> "역세권";
+            case "budget" -> "가성비";
+            default -> tag;
+        };
     }
 }
