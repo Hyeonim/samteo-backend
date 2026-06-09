@@ -15,11 +15,101 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
 public class DataInitializer {
+
+    private static final List<CitySeed> CITIES = List.of(
+            new CitySeed("seoul", "서울", "수도권 중심 상권과 다양한 단기 일자리가 밀집한 도시입니다.", new BigDecimal("37.5665"), new BigDecimal("126.9780"), List.of(
+                    new DistrictSeed("seoul-jongno", "종로구", "종로·북촌 문화권"),
+                    new DistrictSeed("seoul-gangnam", "강남구", "강남역·코엑스 상권"),
+                    new DistrictSeed("seoul-mapo", "마포구", "홍대·합정 상권"),
+                    new DistrictSeed("seoul-yongsan", "용산구", "이태원·한강 생활권")
+            )),
+            new CitySeed("busan", "부산", "해변 관광과 항만 물류 일자리를 함께 볼 수 있는 도시입니다.", new BigDecimal("35.1796"), new BigDecimal("129.0756"), List.of(
+                    new DistrictSeed("busan-haeundae", "해운대구", "해운대 관광지구"),
+                    new DistrictSeed("busan-suyeong", "수영구", "광안리 해변 상권"),
+                    new DistrictSeed("busan-junggu", "중구", "남포동·자갈치 상권"),
+                    new DistrictSeed("busan-busanjin", "부산진구", "서면 중심 상권")
+            )),
+            new CitySeed("daegu", "대구", "도심 상권과 교통 거점 기반의 체류형 일자리가 있는 도시입니다.", new BigDecimal("35.8714"), new BigDecimal("128.6014"), List.of(
+                    new DistrictSeed("junggu", "중구", "동성로·대구역 중심"),
+                    new DistrictSeed("donggu", "동구", "동대구역·팔공산 생활권"),
+                    new DistrictSeed("suseong", "수성구", "수성못·주거 상권"),
+                    new DistrictSeed("dalseo", "달서구", "성서산단·생활 상권"),
+                    new DistrictSeed("bukgu", "북구", "대학가·복합 상권")
+            )),
+            new CitySeed("jeju", "제주", "숙박·관광·렌터카 중심의 시즌 일자리가 많은 도시입니다.", new BigDecimal("33.4996"), new BigDecimal("126.5312"), List.of(
+                    new DistrictSeed("jeju-jeju", "제주시", "공항·시내 생활권"),
+                    new DistrictSeed("jeju-aewol", "애월읍", "해안 카페 거리"),
+                    new DistrictSeed("jeju-seogwipo", "서귀포시", "중문·리조트 권역"),
+                    new DistrictSeed("jeju-seongsan", "성산읍", "성산일출봉 관광권")
+            )),
+            new CitySeed("gangneung", "강릉", "해변 카페와 숙박업 중심의 체류형 일자리가 있는 도시입니다.", new BigDecimal("37.7519"), new BigDecimal("128.8761"), List.of(
+                    new DistrictSeed("gangneung-gyo", "교동", "강릉역 생활권"),
+                    new DistrictSeed("gangneung-anmok", "안목동", "안목해변 카페 거리"),
+                    new DistrictSeed("gangneung-gyeongpo", "경포동", "경포대 관광권"),
+                    new DistrictSeed("gangneung-jumunjin", "주문진읍", "항구·해변 상권")
+            )),
+            new CitySeed("jeonju", "전주", "한옥마을과 전통 음식 관광 일자리가 강한 도시입니다.", new BigDecimal("35.8242"), new BigDecimal("127.1480"), List.of(
+                    new DistrictSeed("jeonju-wansan", "완산구", "한옥마을 생활권"),
+                    new DistrictSeed("jeonju-deokjin", "덕진구", "전북대·터미널 상권"),
+                    new DistrictSeed("jeonju-jungang", "중앙동", "객리단길 상권"),
+                    new DistrictSeed("jeonju-hyoja", "효자동", "신시가지 생활권")
+            )),
+            new CitySeed("gyeongju", "경주", "역사 관광지와 숙박 서비스 일자리가 연결된 도시입니다.", new BigDecimal("35.8562"), new BigDecimal("129.2247"), List.of(
+                    new DistrictSeed("gyeongju-hwangnam", "황남동", "황리단길 상권"),
+                    new DistrictSeed("gyeongju-bomun", "보문동", "보문관광단지"),
+                    new DistrictSeed("gyeongju-bulguk", "불국동", "불국사 관광권"),
+                    new DistrictSeed("gyeongju-dongcheon", "동천동", "시청 생활권")
+            )),
+            new CitySeed("incheon", "인천", "공항·송도·항만 기반의 서비스와 물류 일자리가 있는 도시입니다.", new BigDecimal("37.4563"), new BigDecimal("126.7052"), List.of(
+                    new DistrictSeed("incheon-yeonsu", "연수구", "송도 국제도시"),
+                    new DistrictSeed("incheon-junggu", "중구", "공항·차이나타운 권역"),
+                    new DistrictSeed("incheon-namdong", "남동구", "남동공단 생활권"),
+                    new DistrictSeed("incheon-bupyeong", "부평구", "부평역 상권")
+            )),
+            new CitySeed("yeosu", "여수", "해양 관광과 식음료 서비스 일자리가 있는 도시입니다.", new BigDecimal("34.7604"), new BigDecimal("127.6622"), List.of(
+                    new DistrictSeed("yeosu-jungang", "중앙동", "이순신광장 상권"),
+                    new DistrictSeed("yeosu-dolsan", "돌산읍", "돌산 관광권"),
+                    new DistrictSeed("yeosu-soho", "소호동", "소호 해변 생활권"),
+                    new DistrictSeed("yeosu-ungcheon", "웅천동", "마리나 생활권")
+            )),
+            new CitySeed("sokcho", "속초", "설악산과 해변 숙박권을 함께 보는 관광 도시입니다.", new BigDecimal("38.2070"), new BigDecimal("128.5918"), List.of(
+                    new DistrictSeed("sokcho-joyang", "조양동", "속초해변 생활권"),
+                    new DistrictSeed("sokcho-cheongho", "청호동", "아바이마을 권역"),
+                    new DistrictSeed("sokcho-noryang", "노학동", "설악산 진입권"),
+                    new DistrictSeed("sokcho-geumho", "금호동", "중앙시장 상권")
+            )),
+            new CitySeed("gwangju", "광주", "문화 예술과 도심 서비스 일자리가 균형 잡힌 도시입니다.", new BigDecimal("35.1595"), new BigDecimal("126.8526"), List.of(
+                    new DistrictSeed("gwangju-dong", "동구", "충장로·문화전당 권역"),
+                    new DistrictSeed("gwangju-seo", "서구", "상무지구 상권"),
+                    new DistrictSeed("gwangju-buk", "북구", "전남대 생활권"),
+                    new DistrictSeed("gwangju-gwangsan", "광산구", "첨단·수완 생활권")
+            )),
+            new CitySeed("daejeon", "대전", "교통 중심성과 연구단지 기반 서비스 일자리가 있는 도시입니다.", new BigDecimal("36.3504"), new BigDecimal("127.3845"), List.of(
+                    new DistrictSeed("daejeon-yuseong", "유성구", "유성온천·연구단지"),
+                    new DistrictSeed("daejeon-junggu", "중구", "은행동 중심 상권"),
+                    new DistrictSeed("daejeon-seogu", "서구", "둔산동 행정 상권"),
+                    new DistrictSeed("daejeon-daedeok", "대덕구", "산업단지 생활권")
+            ))
+    );
+
+    private static final List<JobTemplate> JOB_TEMPLATES = List.of(
+            new JobTemplate("카페 매장 스태프", "Samteo Cafe", "Food and Beverage", "Part-time", 1650000, "Mon-Fri 10:00-17:00", List.of("cafe", "beginner", "day-shift")),
+            new JobTemplate("게스트하우스 운영 보조", "Local Stay", "Accommodation", "Short contract", 1850000, "Tue-Sat 09:00-18:00", List.of("stay", "cleaning", "guest-service")),
+            new JobTemplate("관광 안내 데스크", "Travel Lounge", "Tourism", "Contract", 2100000, "Wed-Sun 09:00-18:00", List.of("tourism", "language-plus", "weekend")),
+            new JobTemplate("편의점 야간 스태프", "Samteo Retail", "Store", "Part-time", 1200000, "3 nights per week", List.of("night", "store", "short-term")),
+            new JobTemplate("로컬 식당 홀 스태프", "Local Table", "Food Service", "Part-time", 1750000, "Thu-Mon 11:00-20:00", List.of("meal-support", "service", "local-food")),
+            new JobTemplate("물류 피킹 보조", "Urban Fulfillment", "Logistics", "Short contract", 1950000, "Mon-Fri 08:00-17:00", List.of("logistics", "meal-support", "standing")),
+            new JobTemplate("축제 현장 운영 스태프", "Festival Crew", "Event", "Short contract", 1550000, "Fri-Sun 12:00-21:00", List.of("event", "weekend", "team-work")),
+            new JobTemplate("렌터카 접수 보조", "Mobility Desk", "Mobility", "Contract", 2000000, "Mon-Sat 09:00-18:00", List.of("desk", "driver-license-plus", "tourism")),
+            new JobTemplate("기념품샵 판매 스태프", "Local Goods", "Shopping", "Part-time", 1600000, "Tue-Sun 10:00-19:00", List.of("sales", "tourism", "beginner")),
+            new JobTemplate("호텔 조식 보조", "Morning Hotel", "Accommodation", "Part-time", 1450000, "5 mornings per week", List.of("morning", "hotel", "meal-support"))
+    );
 
     private final RegionRepository regionRepository;
     private final JobRepository jobRepository;
@@ -37,201 +127,84 @@ public class DataInitializer {
     }
 
     private void seedRegions() {
-        if (regionRepository.count() > 0) {
-            return;
+        List<Region> regions = new ArrayList<>();
+        for (CitySeed city : CITIES) {
+            for (int i = 0; i < city.districts().size(); i++) {
+                DistrictSeed district = city.districts().get(i);
+                regions.add(Region.builder()
+                        .id(district.id())
+                        .name(city.name() + " " + district.name())
+                        .summary(city.summary() + " " + district.description() + " 일대를 중심으로 체류 동선을 설계할 수 있습니다.")
+                        .hotPlaceScore(96 - (i * 4))
+                        .housingCostScore(58 + (i * 7) % 35)
+                        .centerLatitude(city.latitude().add(BigDecimal.valueOf(i).multiply(new BigDecimal("0.0060"))))
+                        .centerLongitude(city.longitude().add(BigDecimal.valueOf(i).multiply(new BigDecimal("0.0060"))))
+                        .tags(List.of(city.id(), district.name(), "work-stay", "transit"))
+                        .recommendationReasons(List.of(
+                                district.description() + " 주변 일자리 접근성이 좋습니다.",
+                                "숙소와 일자리의 이동 시간을 함께 비교하기 좋습니다."
+                        ))
+                        .build());
+            }
         }
-
-        regionRepository.saveAll(List.of(
-                Region.builder()
-                        .id("junggu")
-                        .name("Jung-gu")
-                        .summary("Central Daegu district with strong access to jobs and cultural spots.")
-                        .hotPlaceScore(95)
-                        .housingCostScore(62)
-                        .centerLatitude(new BigDecimal("35.8693"))
-                        .centerLongitude(new BigDecimal("128.6062"))
-                        .tags(List.of("hot-place", "downtown", "transit"))
-                        .recommendationReasons(List.of("Many short-term jobs near Dongseong-ro.", "Good fit for walking and transit-based living."))
-                        .build(),
-                Region.builder()
-                        .id("donggu")
-                        .name("Dong-gu")
-                        .summary("Transport-friendly district near Dongdaegu Station and Palgong Mountain.")
-                        .hotPlaceScore(82)
-                        .housingCostScore(74)
-                        .centerLatitude(new BigDecimal("35.8867"))
-                        .centerLongitude(new BigDecimal("128.6356"))
-                        .tags(List.of("transit", "tourism", "nature"))
-                        .recommendationReasons(List.of("Excellent access around Dongdaegu Station.", "Good match for tourism-related jobs."))
-                        .build(),
-                Region.builder()
-                        .id("suseong")
-                        .name("Suseong-gu")
-                        .summary("Stable residential district with strong lifestyle infrastructure.")
-                        .hotPlaceScore(88)
-                        .housingCostScore(48)
-                        .centerLatitude(new BigDecimal("35.8582"))
-                        .centerLongitude(new BigDecimal("128.6306"))
-                        .tags(List.of("housing", "cafe", "lake"))
-                        .recommendationReasons(List.of("Comfortable rest routes near Suseong Lake.", "Dense everyday convenience facilities."))
-                        .build(),
-                Region.builder()
-                        .id("dalseo")
-                        .name("Dalseo-gu")
-                        .summary("Cost-effective district with access to industrial and commercial areas.")
-                        .hotPlaceScore(76)
-                        .housingCostScore(86)
-                        .centerLatitude(new BigDecimal("35.8299"))
-                        .centerLongitude(new BigDecimal("128.5327"))
-                        .tags(List.of("budget", "living", "industry"))
-                        .recommendationReasons(List.of("Good option for reducing stay costs.", "Useful for jobs near Seongseo Industrial Complex."))
-                        .build(),
-                Region.builder()
-                        .id("bukgu")
-                        .name("Buk-gu")
-                        .summary("Youth-friendly district mixed with university areas and local commerce.")
-                        .hotPlaceScore(80)
-                        .housingCostScore(78)
-                        .centerLatitude(new BigDecimal("35.8859"))
-                        .centerLongitude(new BigDecimal("128.5829"))
-                        .tags(List.of("university", "commerce", "budget"))
-                        .recommendationReasons(List.of("Part-time jobs around university areas.", "Balanced living cost."))
-                        .build()
-        ));
+        regionRepository.saveAll(regions);
     }
 
     private void seedJobs() {
-        if (jobRepository.count() > 0) {
-            return;
+        List<Job> jobs = new ArrayList<>();
+        for (CitySeed city : CITIES) {
+            for (int i = 0; i < 50; i++) {
+                DistrictSeed district = city.districts().get(i % city.districts().size());
+                JobTemplate template = JOB_TEMPLATES.get(i % JOB_TEMPLATES.size());
+                int sequence = i + 1;
+                jobs.add(Job.builder()
+                        .id("job-" + city.id() + "-" + String.format("%03d", sequence))
+                        .title(city.name() + " " + district.name() + " " + template.title())
+                        .company(template.company() + " " + city.name() + " " + sequence)
+                        .cityId(city.id())
+                        .cityName(city.name())
+                        .regionId(district.id())
+                        .district(district.name())
+                        .address(city.name() + " " + district.name() + " " + sampleRoadName(sequence) + " " + (10 + sequence))
+                        .category(template.category())
+                        .employmentType(template.employmentType())
+                        .monthlySalary(template.monthlySalary() + (sequence % 8) * 50000)
+                        .workingDays(template.workingDays())
+                        .commuteMinutes(15 + (sequence * 7) % 45)
+                        .latitude(city.latitude().add(BigDecimal.valueOf(sequence % 13).multiply(new BigDecimal("0.0011"))))
+                        .longitude(city.longitude().add(BigDecimal.valueOf(sequence % 11).multiply(new BigDecimal("0.0011"))))
+                        .tags(template.tags())
+                        .build());
+            }
         }
-
-        jobRepository.saveAll(List.of(
-                Job.builder()
-                        .id("job-001")
-                        .title("Dongseong-ro Bakery Cafe Staff")
-                        .company("Samteo Bakery")
-                        .regionId("junggu")
-                        .district("Jung-gu")
-                        .category("Food and Beverage")
-                        .employmentType("Part-time")
-                        .monthlySalary(1600000)
-                        .workingDays("Mon-Fri 10:00-17:00")
-                        .commuteMinutes(22)
-                        .latitude(new BigDecimal("35.8698"))
-                        .longitude(new BigDecimal("128.5940"))
-                        .tags(List.of("beginner", "cafe", "downtown"))
-                        .build(),
-                Job.builder()
-                        .id("job-002")
-                        .title("Palgong Mountain Tourism Staff")
-                        .company("Daegu Travel Lounge")
-                        .regionId("donggu")
-                        .district("Dong-gu")
-                        .category("Tourism")
-                        .employmentType("Contract")
-                        .monthlySalary(2100000)
-                        .workingDays("Wed-Sun 09:00-18:00")
-                        .commuteMinutes(48)
-                        .latitude(new BigDecimal("35.9913"))
-                        .longitude(new BigDecimal("128.6958"))
-                        .tags(List.of("weekend", "tourism", "language-plus"))
-                        .build(),
-                Job.builder()
-                        .id("job-003")
-                        .title("Suseong Lake Convenience Store")
-                        .company("Samteo Retail")
-                        .regionId("suseong")
-                        .district("Suseong-gu")
-                        .category("Store")
-                        .employmentType("Part-time")
-                        .monthlySalary(800000)
-                        .workingDays("3 nights per week")
-                        .commuteMinutes(35)
-                        .latitude(new BigDecimal("35.8265"))
-                        .longitude(new BigDecimal("128.6177"))
-                        .tags(List.of("night", "station", "short-term"))
-                        .build(),
-                Job.builder()
-                        .id("job-004")
-                        .title("Seongseo Logistics Picking")
-                        .company("Seongseo Fulfillment")
-                        .regionId("dalseo")
-                        .district("Dalseo-gu")
-                        .category("Logistics")
-                        .employmentType("Short contract")
-                        .monthlySalary(1850000)
-                        .workingDays("Mon-Fri 08:00-17:00")
-                        .commuteMinutes(42)
-                        .latitude(new BigDecimal("35.8372"))
-                        .longitude(new BigDecimal("128.4888"))
-                        .tags(List.of("meal-support", "logistics", "short-term"))
-                        .build()
-        ));
+        jobRepository.saveAll(jobs);
     }
 
     private void seedAccommodations() {
-        if (accommodationRepository.count() > 0) {
-            return;
+        List<Accommodation> accommodations = new ArrayList<>();
+        for (CitySeed city : CITIES) {
+            for (int i = 0; i < city.districts().size(); i++) {
+                DistrictSeed district = city.districts().get(i);
+                for (int j = 1; j <= 2; j++) {
+                    int sequence = i * 2 + j;
+                    accommodations.add(Accommodation.builder()
+                            .id("acc-" + city.id() + "-" + district.id() + "-" + j)
+                            .name(city.name() + " " + district.name() + " 스테이 " + j)
+                            .regionId(district.id())
+                            .district(district.name())
+                            .address(city.name() + " " + district.name() + " " + sampleRoadName(sequence) + " " + (20 + sequence))
+                            .monthlyPrice(380000 + ((sequence + city.id().length()) % 8) * 45000)
+                            .deposit(100000 + (sequence % 5) * 50000)
+                            .distanceKm(new BigDecimal("0.8").add(BigDecimal.valueOf(sequence).multiply(new BigDecimal("0.35"))))
+                            .commuteMinutes(12 + (sequence * 5) % 35)
+                            .latitude(city.latitude().add(BigDecimal.valueOf(sequence).multiply(new BigDecimal("0.0015"))))
+                            .longitude(city.longitude().add(BigDecimal.valueOf(sequence).multiply(new BigDecimal("0.0015"))))
+                            .tags(List.of("short-term", "private-room", sequence % 2 == 0 ? "station" : "budget"))
+                            .build());
+                }
+            }
         }
-
-        accommodationRepository.saveAll(List.of(
-                Accommodation.builder()
-                        .id("acc-001")
-                        .name("Daegu Downtown Hostel")
-                        .regionId("junggu")
-                        .district("Jung-gu")
-                        .address("12 Jungang-daero 1-gil")
-                        .monthlyPrice(450000)
-                        .deposit(100000)
-                        .distanceKm(new BigDecimal("1.2"))
-                        .commuteMinutes(18)
-                        .latitude(new BigDecimal("35.8714"))
-                        .longitude(new BigDecimal("128.6014"))
-                        .tags(List.of("shared-kitchen", "downtown", "short-term"))
-                        .build(),
-                Accommodation.builder()
-                        .id("acc-002")
-                        .name("Dongdaegu Stay")
-                        .regionId("donggu")
-                        .district("Dong-gu")
-                        .address("550 Dongdaegu-ro")
-                        .monthlyPrice(520000)
-                        .deposit(200000)
-                        .distanceKm(new BigDecimal("2.8"))
-                        .commuteMinutes(35)
-                        .latitude(new BigDecimal("35.8797"))
-                        .longitude(new BigDecimal("128.6289"))
-                        .tags(List.of("station", "private-room", "transit"))
-                        .build(),
-                Accommodation.builder()
-                        .id("acc-003")
-                        .name("Suseong Lake One-roomtel")
-                        .regionId("suseong")
-                        .district("Suseong-gu")
-                        .address("24 Suseongmot-gil")
-                        .monthlyPrice(620000)
-                        .deposit(300000)
-                        .distanceKm(new BigDecimal("3.1"))
-                        .commuteMinutes(30)
-                        .latitude(new BigDecimal("35.8288"))
-                        .longitude(new BigDecimal("128.6180"))
-                        .tags(List.of("private-room", "lake", "quiet"))
-                        .build(),
-                Accommodation.builder()
-                        .id("acc-004")
-                        .name("Seongseo Budget Residence")
-                        .regionId("dalseo")
-                        .district("Dalseo-gu")
-                        .address("72 Seongseogongdan-ro")
-                        .monthlyPrice(380000)
-                        .deposit(100000)
-                        .distanceKm(new BigDecimal("1.9"))
-                        .commuteMinutes(24)
-                        .latitude(new BigDecimal("35.8423"))
-                        .longitude(new BigDecimal("128.4921"))
-                        .tags(List.of("budget", "laundry", "industrial-area"))
-                        .build()
-        ));
+        accommodationRepository.saveAll(accommodations);
     }
 
     private void seedUsers() {
@@ -245,5 +218,19 @@ public class DataInitializer {
                 "Samteo Demo",
                 passwordEncoder.encode("1234")
         ));
+    }
+
+    private String sampleRoadName(int sequence) {
+        List<String> roads = List.of("중앙로", "청년로", "시장길", "해변로", "문화로", "역전로", "공원로", "구암로", "관광로", "상생길");
+        return roads.get(sequence % roads.size());
+    }
+
+    private record CitySeed(String id, String name, String summary, BigDecimal latitude, BigDecimal longitude, List<DistrictSeed> districts) {
+    }
+
+    private record DistrictSeed(String id, String name, String description) {
+    }
+
+    private record JobTemplate(String title, String company, String category, String employmentType, int monthlySalary, String workingDays, List<String> tags) {
     }
 }

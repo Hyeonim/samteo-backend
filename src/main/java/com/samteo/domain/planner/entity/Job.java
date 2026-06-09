@@ -34,11 +34,20 @@ public class Job {
     @Column(nullable = false, length = 150)
     private String company;
 
+    @Column(length = 50)
+    private String cityId;
+
+    @Column(length = 100)
+    private String cityName;
+
     @Column(nullable = false, length = 50)
     private String regionId;
 
     @Column(nullable = false, length = 100)
     private String district;
+
+    @Column(length = 255)
+    private String address;
 
     @Column(nullable = false, length = 100)
     private String category;

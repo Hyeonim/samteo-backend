@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -17,9 +18,12 @@ public class JobResponse {
     private String name;
     private String title;
     private String company;
+    private String cityId;
+    private String cityName;
     private String regionId;
     private String district;
     private String region;
+    private String address;
     private String type;
     private String category;
     private String employmentType;
@@ -41,14 +45,18 @@ public class JobResponse {
     private String source;
 
     public static JobResponse from(Job job) {
+        List<String> tags = job.getTags() == null ? List.of() : new ArrayList<>(job.getTags());
         return JobResponse.builder()
                 .id(job.getId())
                 .name(job.getTitle())
                 .title(job.getTitle())
                 .company(job.getCompany())
+                .cityId(job.getCityId())
+                .cityName(job.getCityName())
                 .regionId(job.getRegionId())
                 .district(job.getDistrict())
-                .region(job.getDistrict())
+                .region(job.getCityName() == null ? job.getDistrict() : job.getCityName() + " " + job.getDistrict())
+                .address(job.getAddress())
                 .type(job.getCategory())
                 .category(job.getCategory())
                 .employmentType(job.getEmploymentType())
@@ -57,7 +65,7 @@ public class JobResponse {
                 .workingDays(job.getWorkingDays())
                 .commuteMinutes(job.getCommuteMinutes())
                 .desc(job.getCompany() + " / " + job.getWorkingDays())
-                .location(job.getDistrict() + " / commute " + job.getCommuteMinutes() + " min")
+                .location(job.getAddress() == null ? job.getDistrict() + " / commute " + job.getCommuteMinutes() + " min" : job.getAddress())
                 .priceLabel("KRW " + job.getMonthlySalary())
                 .unit("/month")
                 .sub("dummy job data")
@@ -66,7 +74,7 @@ public class JobResponse {
                 .longitude(job.getLongitude())
                 .lat(job.getLatitude())
                 .lng(job.getLongitude())
-                .tags(job.getTags())
+                .tags(tags)
                 .source("HR_DUMMY")
                 .build();
     }

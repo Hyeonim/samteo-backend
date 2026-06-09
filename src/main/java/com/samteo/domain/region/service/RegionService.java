@@ -6,6 +6,7 @@ import com.samteo.domain.region.entity.Region;
 import com.samteo.domain.region.repository.RegionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.util.Comparator;
@@ -18,12 +19,14 @@ public class RegionService {
     private final RegionRepository regionRepository;
     private final SecureRandom random = new SecureRandom();
 
+    @Transactional(readOnly = true)
     public List<RegionResponse> getRegions() {
         return regionRepository.findAll().stream()
                 .map(RegionResponse::from)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<RegionResponse> recommend(RegionRecommendationRequest request) {
         String option = request == null || request.getOption() == null ? "random" : request.getOption();
 
