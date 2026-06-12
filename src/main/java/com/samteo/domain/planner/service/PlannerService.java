@@ -40,15 +40,22 @@ public class PlannerService {
     public PlannerBootstrapResponse getBootstrapData() {
         return PlannerBootstrapResponse.builder()
                 .regions(regionRepository.findAll().stream().map(RegionResponse::from).toList())
-                .jobs(getJobs(null))
+                .jobs(getJobs(null, null))
                 .accommodations(getAccommodations(null))
                 .mapProvider(getMapProvider())
                 .build();
     }
 
     @Transactional(readOnly = true)
-    public List<JobResponse> getJobs(String regionId) {
-        List<Job> jobs = regionId == null ? jobRepository.findAll() : jobRepository.findByRegionId(regionId);
+    public List<JobResponse> getJobs(String regionId, String cityId) {
+        List<Job> jobs;
+        if (regionId != null) {
+            jobs = jobRepository.findByRegionId(regionId);
+        } else if (cityId != null) {
+            jobs = jobRepository.findByCityId(cityId);
+        } else {
+            jobs = jobRepository.findAll();
+        }
         return jobs.stream()
                 .map(JobResponse::from)
                 .toList();

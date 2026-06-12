@@ -40,9 +40,10 @@ public class PlannerController {
 
     @GetMapping("/jobs")
     public ResponseEntity<ApiResponse<List<JobResponse>>> getJobs(
-            @RequestParam(required = false) String regionId
+            @RequestParam(required = false) String regionId,
+            @RequestParam(required = false) String cityId
     ) {
-        return ResponseEntity.ok(ApiResponse.success(plannerService.getJobs(regionId)));
+        return ResponseEntity.ok(ApiResponse.success(plannerService.getJobs(regionId, cityId)));
     }
 
     @GetMapping("/accommodations")
