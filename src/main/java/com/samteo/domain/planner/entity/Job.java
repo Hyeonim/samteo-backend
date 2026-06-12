@@ -7,6 +7,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -71,5 +73,6 @@ public class Job {
     @ElementCollection
     @CollectionTable(name = "job_tags", joinColumns = @JoinColumn(name = "job_id"))
     @Column(name = "tag", nullable = false)
+    @Fetch(FetchMode.SUBSELECT)
     private List<String> tags;
 }
