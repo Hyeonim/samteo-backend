@@ -7,6 +7,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,10 +48,12 @@ public class Region {
     @ElementCollection
     @CollectionTable(name = "region_tags", joinColumns = @JoinColumn(name = "region_id"))
     @Column(name = "tag", nullable = false)
+    @Fetch(FetchMode.SUBSELECT)
     private List<String> tags;
 
     @ElementCollection
     @CollectionTable(name = "region_recommendation_reasons", joinColumns = @JoinColumn(name = "region_id"))
     @Column(name = "reason", nullable = false, length = 500)
+    @Fetch(FetchMode.SUBSELECT)
     private List<String> recommendationReasons;
 }
