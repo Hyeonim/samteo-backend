@@ -127,6 +127,7 @@ public class DataInitializer {
     }
 
     private void seedRegions() {
+        if (regionRepository.count() > 0) return;
         List<Region> regions = new ArrayList<>();
         for (CitySeed city : CITIES) {
             for (int i = 0; i < city.districts().size(); i++) {
@@ -151,6 +152,7 @@ public class DataInitializer {
     }
 
     private void seedJobs() {
+        if (jobRepository.count() > 0) return;
         List<Job> jobs = new ArrayList<>();
         for (CitySeed city : CITIES) {
             for (int i = 0; i < 50; i++) {
@@ -181,6 +183,7 @@ public class DataInitializer {
     }
 
     private void seedAccommodations() {
+        if (accommodationRepository.count() > 0) return;
         List<Accommodation> accommodations = new ArrayList<>();
         for (CitySeed city : CITIES) {
             for (int i = 0; i < city.districts().size(); i++) {
