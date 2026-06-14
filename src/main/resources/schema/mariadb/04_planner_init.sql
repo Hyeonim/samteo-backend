@@ -21,7 +21,7 @@ VALUES
   ('incheon', '인천', '공항·송도·항만 기반의 서비스와 물류 일자리가 있는 도시입니다.', 37.4563000, 126.7052000),
   ('yeosu', '여수', '해양 관광과 식음료 서비스 일자리가 있는 도시입니다.', 34.7604000, 127.6622000),
   ('sokcho', '속초', '설악산과 해변 숙박권을 함께 보는 관광 도시입니다.', 38.2070000, 128.5918000),
-  ('gwangju', '광주', '문화 예술과 도심 서비스 일자리가 균형 잡힌 도시입니다.', 35.1595000, 126.8526000),
+  ('gwangju', '광주', '문화 예술과 도심 서비스 일자리가 균형 있게 열린 도시입니다.', 35.1595000, 126.8526000),
   ('daejeon', '대전', '교통 중심성과 연구단지 기반 서비스 일자리가 있는 도시입니다.', 36.3504000, 127.3845000);
 
 CREATE TEMPORARY TABLE `tmp_planner_districts` (
@@ -42,10 +42,10 @@ VALUES
   ('seoul', 4, 'seoul-yongsan', '용산구', '이태원·한강 생활권'),
   ('busan', 1, 'busan-haeundae', '해운대구', '해운대 관광지구'),
   ('busan', 2, 'busan-suyeong', '수영구', '광안리 해변 상권'),
-  ('busan', 3, 'busan-junggu', '중구', '남포동·자갈치 상권'),
+  ('busan', 3, 'busan-junggu', '중구', '남포·자갈치 상권'),
   ('busan', 4, 'busan-busanjin', '부산진구', '서면 중심 상권'),
-  ('daegu', 1, 'junggu', '중구', '동성로·대구역 중심'),
-  ('daegu', 2, 'donggu', '동구', '동대구역·팔공산 생활권'),
+  ('daegu', 1, 'junggu', '중구', '동성로와 대구역 중심'),
+  ('daegu', 2, 'donggu', '동구', '동대구역·복합 생활권'),
   ('daegu', 3, 'suseong', '수성구', '수성못·주거 상권'),
   ('daegu', 4, 'dalseo', '달서구', '성서산단·생활 상권'),
   ('daegu', 5, 'bukgu', '북구', '대학가·복합 상권'),
@@ -82,7 +82,7 @@ VALUES
   ('gwangju', 3, 'gwangju-buk', '북구', '전남대 생활권'),
   ('gwangju', 4, 'gwangju-gwangsan', '광산구', '첨단·수완 생활권'),
   ('daejeon', 1, 'daejeon-yuseong', '유성구', '유성온천·연구단지'),
-  ('daejeon', 2, 'daejeon-junggu', '중구', '은행동 중심 상권'),
+  ('daejeon', 2, 'daejeon-junggu', '중구', '대흥동 중심 상권'),
   ('daejeon', 3, 'daejeon-seogu', '서구', '둔산동 행정 상권'),
   ('daejeon', 4, 'daejeon-daedeok', '대덕구', '산업단지 생활권');
 
@@ -138,7 +138,6 @@ SELECT
   c.`longitude` + ((d.`district_order` - 1) * 0.0060)
 FROM `tmp_planner_districts` d
 JOIN `tmp_planner_cities` c ON c.`city_id` = d.`city_id`
-WHERE 1 = 1
 ON DUPLICATE KEY UPDATE
   `name` = VALUES(`name`),
   `summary` = VALUES(`summary`),
@@ -185,7 +184,6 @@ JOIN `tmp_job_templates` jt ON jt.`template_no` = ((s.`n` - 1) % 10) + 1
 JOIN `tmp_planner_districts` d
   ON d.`city_id` = c.`city_id`
  AND d.`district_order` = ((s.`n` - 1) % (SELECT COUNT(*) FROM `tmp_planner_districts` cd WHERE cd.`city_id` = c.`city_id`)) + 1
-WHERE 1 = 1
 ON DUPLICATE KEY UPDATE
   `title` = VALUES(`title`),
   `company` = VALUES(`company`),
@@ -229,7 +227,6 @@ SELECT
 FROM `tmp_planner_cities` c
 JOIN `tmp_planner_districts` d ON d.`city_id` = c.`city_id`
 JOIN `tmp_acc_seq` a
-WHERE 1 = 1
 ON DUPLICATE KEY UPDATE
   `name` = VALUES(`name`),
   `region_id` = VALUES(`region_id`),
