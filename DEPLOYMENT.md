@@ -29,34 +29,65 @@ FLUSH PRIVILEGES;
 
 Allow MariaDB port `3306` only from the EC2 security group.
 
+## GitHub Secrets and Variables
+
+The deploy workflow creates `~/samteo/.env` on EC2 from GitHub repository
+Secrets and Variables. Configure them in:
+
+```text
+GitHub repository > Settings > Secrets and variables > Actions
+```
+
+Add these values under **Secrets**:
+
+```text
+EC2_HOST=<EC2 public IP or DNS>
+EC2_USER=ec2-user
+EC2_SSH_KEY=<private pem contents>
+
+DB_URL=jdbc:mariadb://samteo-mariadb.cz4qceswyc1x.ap-northeast-2.rds.amazonaws.com:3306/samteo_db
+DB_USERNAME=admin
+DB_PASSWORD=<database password>
+
+JWT_SECRET=<long random secret>
+ODSAY_API_KEY=<ODsay API key>
+GWANWANGIN_API_KEY=<Gwanwangin API key, or leave unset if unused>
+TOURAPI_SERVICE_KEY=<TourAPI service key>
+KAKAO_CLIENT_ID=<Kakao REST API key>
+KAKAO_CLIENT_SECRET=<Kakao client secret>
+```
+
+Add these values under **Variables**:
+
+```text
+SPRING_PROFILES_ACTIVE=prod
+DDL_AUTO=update
+JWT_EXPIRATION=86400000
+KAKAO_REDIRECT_URI=https://www.samteo.org/login/oauth2/code/kakao
+APP_FRONTEND_URL=https://www.samteo.org
+APP_IMAGE=ghcr.io/hyeonim/samteo-backend:latest
+SITE_DOMAIN=www.samteo.org
+```
+
+Values such as `APP_IMAGE`, `SITE_DOMAIN`, and redirect URLs are not secret,
+so repository variables are enough. Database credentials, API keys, OAuth
+client secrets, JWT secrets, and SSH keys must stay in repository secrets.
+
+If any real secret has been posted in chat, committed, or shared in a screenshot,
+rotate it before using it in production.
+
 ## First deploy
 
-Create the deployment directory and environment file on EC2.
+Create the deployment directory on EC2.
 
 ```bash
 mkdir -p ~/samteo
-cd ~/samteo
-vi .env
 ```
 
-Use `.env.example` as the template. Do not commit real secrets.
-
-Required GitHub repository secrets:
-
-```text
-EC2_HOST=54.116.25.70
-EC2_USER=ec2-user
-EC2_SSH_KEY=<private pem contents>
-```
-
-If the GHCR package is private, also add a GitHub PAT with `read:packages`.
-
-```text
-GHCR_USERNAME=<github username>
-GHCR_TOKEN=<github token with read:packages>
-```
-
-If the GHCR package is public, `GHCR_USERNAME` and `GHCR_TOKEN` are not required.
+After GitHub Secrets and Variables are configured, push to `main` or run the
+`Deploy` workflow manually. The workflow builds the backend image, pushes it to
+GHCR, copies `docker-compose.prod.yml`, `Caddyfile`, and the generated `.env`
+to EC2, then restarts Docker Compose.
 
 ## GHCR denied issue
 
@@ -88,8 +119,6 @@ Resolution:
 2. For public images, do not use GHCR secrets in the deploy workflow.
 3. Run `docker logout ghcr.io || true` before `docker compose pull` to avoid the same issue later.
 ```
-
-After `.env` exists on the server, push to `main` or run the `Deploy` workflow manually.
 
 ## DNS and security groups
 

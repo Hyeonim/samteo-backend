@@ -62,13 +62,34 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Copy compose file
+      - name: Create production env file
+        run: |
+          cat > .env.deploy <<'EOF'
+          SPRING_PROFILES_ACTIVE=${{ vars.SPRING_PROFILES_ACTIVE || 'prod' }}
+          DB_URL=${{ secrets.DB_URL }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DDL_AUTO=${{ vars.DDL_AUTO || 'update' }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRATION=${{ vars.JWT_EXPIRATION || '86400000' }}
+          ODSAY_API_KEY=${{ secrets.ODSAY_API_KEY }}
+          GWANWANGIN_API_KEY=${{ secrets.GWANWANGIN_API_KEY }}
+          TOURAPI_SERVICE_KEY=${{ secrets.TOURAPI_SERVICE_KEY }}
+          KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
+          KAKAO_REDIRECT_URI=${{ vars.KAKAO_REDIRECT_URI || 'https://www.samteo.org/login/oauth2/code/kakao' }}
+          APP_FRONTEND_URL=${{ vars.APP_FRONTEND_URL || 'https://www.samteo.org' }}
+          APP_IMAGE=${{ vars.APP_IMAGE || 'ghcr.io/hyeonim/samteo-backend:latest' }}
+          SITE_DOMAIN=${{ vars.SITE_DOMAIN || 'www.samteo.org' }}
+          EOF
+
+      - name: Copy deployment files
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: docker-compose.prod.yml,Caddyfile
+          source: docker-compose.prod.yml,Caddyfile,.env.deploy
           target: ~/samteo
 
       - name: Deploy to EC2
@@ -81,10 +102,8 @@ jobs:
             set -e
             mkdir -p ~/samteo
             cd ~/samteo
-            if [ ! -f .env ]; then
-              echo ".env is missing on the server. Create ~/samteo/.env before deploy."
-              exit 1
-            fi
+            mv .env.deploy .env
+            chmod 600 .env
             docker logout ghcr.io || true
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d
