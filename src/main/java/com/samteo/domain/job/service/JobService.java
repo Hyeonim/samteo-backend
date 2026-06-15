@@ -5,12 +5,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.samteo.domain.job.dto.response.JobResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 관광 일자리 API와 연동하여 원본 응답을 서비스용 DTO로 정규화한다.
@@ -19,8 +24,13 @@ import java.util.List;
 @Service
 public class JobService {
 
+    private static final Duration CACHE_TTL = Duration.ofMinutes(10);
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(3);
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(5);
+
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
+    private final Map<Integer, CacheEntry> cache = new ConcurrentHashMap<>();
 
     @Value("${external.gwanwangin.api-key}")
     private String apiKey;
@@ -29,7 +39,9 @@ public class JobService {
     private String baseUrl;
 
     public JobService(RestClient.Builder restClientBuilder, ObjectMapper objectMapper) {
-        this.restClient = restClientBuilder.build();
+        this.restClient = restClientBuilder
+                .requestFactory(requestFactory())
+                .build();
         this.objectMapper = objectMapper;
     }
 
@@ -40,13 +52,21 @@ public class JobService {
      * @return 정규화된 채용 공고 목록
      */
     public List<JobResponse> getJobs(int size) {
-        URI uri = URI.create(baseUrl + "/empmnInfoList"
-                + "?serviceKey=" + apiKey
-                + "&MobileOS=ETC"
-                + "&MobileApp=samteo"
-                + "&numOfRows=" + size
-                + "&pageNo=1"
-                + "&_type=json");
+        CacheEntry cached = cache.get(size);
+        if (cached != null && !cached.isExpired()) {
+            return cached.jobs();
+        }
+
+        URI uri = UriComponentsBuilder.fromUriString(baseUrl + "/empmnInfoList")
+                .queryParam("serviceKey", apiKey)
+                .queryParam("MobileOS", "ETC")
+                .queryParam("MobileApp", "samteo")
+                .queryParam("numOfRows", size)
+                .queryParam("pageNo", 1)
+                .queryParam("_type", "json")
+                .build()
+                .encode()
+                .toUri();
 
         try {
             String body = restClient.get()
@@ -57,11 +77,23 @@ public class JobService {
             JsonNode items = objectMapper.readTree(body)
                     .path("response").path("body").path("items").path("item");
 
-            return parseItems(items);
+            List<JobResponse> jobs = List.copyOf(parseItems(items));
+            cache.put(size, new CacheEntry(jobs, System.currentTimeMillis() + CACHE_TTL.toMillis()));
+            return jobs;
         } catch (Exception e) {
             log.error("Gwanwangin API call failed: {}", e.getMessage());
+            if (cached != null) {
+                return cached.jobs();
+            }
             throw new RuntimeException("Failed to load jobs.");
         }
+    }
+
+    private SimpleClientHttpRequestFactory requestFactory() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(CONNECT_TIMEOUT);
+        factory.setReadTimeout(READ_TIMEOUT);
+        return factory;
     }
 
     private List<JobResponse> parseItems(JsonNode items) {
@@ -106,5 +138,12 @@ public class JobService {
             return null;
         }
         return raw.length() >= 10 ? raw.substring(0, 10) : raw;
+    }
+
+    private record CacheEntry(List<JobResponse> jobs, long expiresAtMillis) {
+
+        private boolean isExpired() {
+            return System.currentTimeMillis() >= expiresAtMillis;
+        }
     }
 }

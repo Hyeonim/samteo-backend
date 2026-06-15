@@ -52,7 +52,6 @@ DB_PASSWORD=<database password>
 JWT_SECRET=<long random secret>
 ODSAY_API_KEY=<ODsay API key>
 GWANWANGIN_API_KEY=<Gwanwangin API key, or leave unset if unused>
-TOURAPI_SERVICE_KEY=<TourAPI service key>
 KAKAO_CLIENT_ID=<Kakao REST API key>
 KAKAO_CLIENT_SECRET=<Kakao client secret>
 ```
