@@ -1,48 +1,34 @@
 package com.samteo.domain.festival.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.samteo.domain.festival.dto.response.FestivalResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
-import java.net.URI;
 import java.sql.Date;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * TourAPI 축제 데이터와 로컬 더미 축제 데이터를 함께 조회한다.
+ * 적재된 축제 데이터를 로컬 DB에서 조회한다.
  */
-@Slf4j
 @Service
 public class FestivalService {
 
-    private final RestClient restClient;
-    private final ObjectMapper objectMapper;
+    private static final Duration CACHE_TTL = Duration.ofHours(1);
+
     private final JdbcTemplate jdbcTemplate;
+    private final Map<YearMonth, CacheEntry> cache = new ConcurrentHashMap<>();
 
-    @Value("${external.tourapi.service-key}")
-    private String serviceKey;
-
-    @Value("${external.tourapi.base-url}")
-    private String baseUrl;
-
-    public FestivalService(RestClient.Builder restClientBuilder, ObjectMapper objectMapper, JdbcTemplate jdbcTemplate) {
-        this.restClient = restClientBuilder.build();
-        this.objectMapper = objectMapper;
+    public FestivalService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
     /**
-     * 지정한 연월의 축제를 조회한다. 로컬 DB 데이터는 항상 포함하고, TourAPI 장애 시에는 로컬 데이터로 대체한다.
+     * 지정한 연월의 축제를 적재 테이블에서 조회한다.
      *
      * @param year 조회 대상 연도
      * @param month 조회 대상 월
@@ -50,38 +36,14 @@ public class FestivalService {
      */
     public List<FestivalResponse> getFestivals(int year, int month) {
         YearMonth yearMonth = YearMonth.of(year, month);
-        String startDate = String.format("%d%02d01", year, month);
-        String endDate = String.format("%d%02d%02d", year, month, yearMonth.lengthOfMonth());
-        List<FestivalResponse> localFestivals = getLocalFestivals(yearMonth);
-
-        URI uri = URI.create(baseUrl + "/searchFestival2"
-                + "?serviceKey=" + serviceKey
-                + "&MobileOS=ETC"
-                + "&MobileApp=samteo"
-                + "&_type=json"
-                + "&eventStartDate=" + startDate
-                + "&eventEndDate=" + endDate
-                + "&arrange=A"
-                + "&numOfRows=100"
-                + "&pageNo=1");
-
-        try {
-            String body = restClient.get()
-                    .uri(uri)
-                    .retrieve()
-                    .body(String.class);
-
-            JsonNode items = objectMapper.readTree(body)
-                    .path("response").path("body").path("items").path("item");
-
-            return mergeFestivals(localFestivals, parseItems(items));
-        } catch (Exception e) {
-            log.error("TourAPI call failed: {}", e.getMessage());
-            if (!localFestivals.isEmpty()) {
-                return localFestivals;
-            }
-            throw new RuntimeException("Failed to load festivals.");
+        CacheEntry cached = cache.get(yearMonth);
+        if (cached != null && !cached.isExpired()) {
+            return cached.festivals();
         }
+
+        List<FestivalResponse> festivals = List.copyOf(getLocalFestivals(yearMonth));
+        cache.put(yearMonth, new CacheEntry(festivals, System.currentTimeMillis() + CACHE_TTL.toMillis()));
+        return festivals;
     }
 
     private List<FestivalResponse> getLocalFestivals(YearMonth yearMonth) {
@@ -96,7 +58,6 @@ public class FestivalService {
                   tc.addr1
                 FROM DETAIL_FESTIVAL df
                 JOIN TOUR_CONTENT tc ON tc.content_id = df.content_id
-                JOIN META_AREA ma ON ma.area_code = df.area_code
                 WHERE df.event_start_date <= ?
                   AND df.event_end_date >= ?
                 ORDER BY df.event_start_date, tc.title
@@ -108,52 +69,6 @@ public class FestivalService {
                 .endDate(formatDate(rs.getDate("event_end_date")))
                 .location(resolveLocalRegion(rs.getInt("area_code"), rs.getString("addr1")))
                 .build(), Date.valueOf(lastDay), Date.valueOf(firstDay));
-    }
-
-    private List<FestivalResponse> parseItems(JsonNode items) {
-        List<FestivalResponse> result = new ArrayList<>();
-        if (items.isArray()) {
-            items.forEach(item -> result.add(mapToFestivalResponse(item)));
-        } else if (!items.isMissingNode() && !items.isNull()) {
-            result.add(mapToFestivalResponse(items));
-        }
-        return result;
-    }
-
-    private List<FestivalResponse> mergeFestivals(List<FestivalResponse> local, List<FestivalResponse> external) {
-        Map<String, FestivalResponse> merged = new LinkedHashMap<>();
-        for (FestivalResponse festival : local) {
-            merged.put(festivalKey(festival), festival);
-        }
-        for (FestivalResponse festival : external) {
-            merged.putIfAbsent(festivalKey(festival), festival);
-        }
-        return new ArrayList<>(merged.values());
-    }
-
-    private String festivalKey(FestivalResponse festival) {
-        return festival.getTitle() + "|" + festival.getStartDate() + "|" + festival.getEndDate();
-    }
-
-    private FestivalResponse mapToFestivalResponse(JsonNode item) {
-        return FestivalResponse.builder()
-                .title(textOf(item, "title"))
-                .startDate(formatDate(textOf(item, "eventstartdate")))
-                .endDate(formatDate(textOf(item, "eventenddate")))
-                .location(extractRegion(textOf(item, "addr1")))
-                .build();
-    }
-
-    private String textOf(JsonNode node, String field) {
-        JsonNode value = node.get(field);
-        return (value != null && !value.isNull()) ? value.asText() : null;
-    }
-
-    private String formatDate(String raw) {
-        if (raw == null || raw.length() != 8) {
-            return raw;
-        }
-        return raw.substring(0, 4) + "-" + raw.substring(4, 6) + "-" + raw.substring(6, 8);
     }
 
     private String formatDate(Date date) {
@@ -205,5 +120,12 @@ public class FestivalService {
             }
         }
         return token;
+    }
+
+    private record CacheEntry(List<FestivalResponse> festivals, long expiresAtMillis) {
+
+        private boolean isExpired() {
+            return System.currentTimeMillis() >= expiresAtMillis;
+        }
     }
 }
