@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * TourAPI 축제 데이터를 기반으로 축제 조회 API를 제공한다.
+ * 적재된 축제 데이터를 기반으로 축제 조회 API를 제공한다.
  */
 @RestController
 @RequestMapping("/api")
