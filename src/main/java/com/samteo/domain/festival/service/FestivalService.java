@@ -12,9 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * 적재된 축제 데이터를 로컬 DB에서 조회한다.
- */
 @Service
 public class FestivalService {
 
@@ -27,13 +24,6 @@ public class FestivalService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    /**
-     * 지정한 연월의 축제를 적재 테이블에서 조회한다.
-     *
-     * @param year 조회 대상 연도
-     * @param month 조회 대상 월
-     * @return 축제 목록
-     */
     public List<FestivalResponse> getFestivals(int year, int month) {
         YearMonth yearMonth = YearMonth.of(year, month);
         CacheEntry cached = cache.get(yearMonth);
@@ -56,8 +46,8 @@ public class FestivalService {
                   df.event_end_date,
                   df.area_code,
                   tc.addr1
-                FROM DETAIL_FESTIVAL df
-                JOIN TOUR_CONTENT tc ON tc.content_id = df.content_id
+                FROM detail_festival df
+                JOIN tour_content tc ON tc.content_id = df.content_id
                 WHERE df.event_start_date <= ?
                   AND df.event_end_date >= ?
                 ORDER BY df.event_start_date, tc.title
@@ -101,20 +91,21 @@ public class FestivalService {
             case 7 -> "울산";
             case 8 -> "세종";
             case 31 -> "경기";
-            case 32 -> extractRegion(addr);
+            case 32, 35, 38 -> extractRegion(addr);
             case 33 -> "충북";
             case 34 -> "충남";
-            case 35 -> extractRegion(addr);
             case 36 -> "경남";
             case 37 -> "전주";
-            case 38 -> extractRegion(addr);
             case 39 -> "제주";
             default -> extractRegion(addr);
         };
     }
 
     private String normalizeRegionToken(String token) {
-        for (String suffix : List.of("특별자치도", "특별자치시", "특별시", "광역시", "도", "시", "군", "구")) {
+        if (token == null || token.isBlank()) {
+            return token;
+        }
+        for (String suffix : List.of("특별자치도", "특별자치시", "광역시", "특별시", "시", "군", "구", "도")) {
             if (token.endsWith(suffix)) {
                 return token.substring(0, token.length() - suffix.length());
             }
