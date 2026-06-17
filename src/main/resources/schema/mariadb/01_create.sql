@@ -1,23 +1,8 @@
-CREATE DATABASE IF NOT EXISTS `samteo_db`
+﻿CREATE DATABASE IF NOT EXISTS `samteo_db`
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
 USE `samteo_db`;
-
-CREATE TABLE IF NOT EXISTS `USER` (
-  `user_id` BIGINT NOT NULL AUTO_INCREMENT,
-  `email` VARCHAR(255) NOT NULL,
-  `name` VARCHAR(100) NOT NULL,
-  `profile_image` VARCHAR(500),
-  `provider` ENUM('local','kakao') NOT NULL DEFAULT 'local',
-  `provider_id` VARCHAR(255),
-  `password_hash` VARCHAR(255),
-  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`user_id`),
-  UNIQUE KEY `uq_user_email` (`email`),
-  UNIQUE KEY `uq_user_provider` (`provider`, `provider_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `users` (
   `user_id` BIGINT NOT NULL AUTO_INCREMENT,
@@ -33,14 +18,14 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `uq_users_provider` (`provider`, `provider_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `META_AREA` (
+CREATE TABLE IF NOT EXISTS `meta_area` (
   `area_code` INT NOT NULL,
   `area_name` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`area_code`),
   UNIQUE KEY `uq_meta_area_name` (`area_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `META_SIGUNGU` (
+CREATE TABLE IF NOT EXISTS `meta_sigungu` (
   `sigungu_id` BIGINT NOT NULL AUTO_INCREMENT,
   `area_code` INT NOT NULL,
   `sigungu_code` INT NOT NULL,
@@ -49,10 +34,10 @@ CREATE TABLE IF NOT EXISTS `META_SIGUNGU` (
   UNIQUE KEY `uq_meta_sigungu_area_code` (`area_code`, `sigungu_code`),
   KEY `idx_meta_sigungu_area_code` (`area_code`),
   CONSTRAINT `fk_meta_sigungu_area`
-    FOREIGN KEY (`area_code`) REFERENCES `META_AREA` (`area_code`)
+    FOREIGN KEY (`area_code`) REFERENCES `meta_area` (`area_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `META_CONTENT_TYPE` (
+CREATE TABLE IF NOT EXISTS `meta_content_type` (
   `content_type_id` INT NOT NULL,
   `content_type_name` VARCHAR(100) NOT NULL,
   `is_active` BOOLEAN NOT NULL DEFAULT TRUE,
@@ -60,7 +45,7 @@ CREATE TABLE IF NOT EXISTS `META_CONTENT_TYPE` (
   UNIQUE KEY `uq_meta_content_type_name` (`content_type_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `TOUR_CONTENT` (
+CREATE TABLE IF NOT EXISTS `tour_content` (
   `content_id` BIGINT NOT NULL,
   `area_code` INT NOT NULL,
   `sigungu_id` BIGINT,
@@ -87,14 +72,14 @@ CREATE TABLE IF NOT EXISTS `TOUR_CONTENT` (
   KEY `idx_tour_content_type_id` (`content_type_id`),
   KEY `idx_tour_content_title` (`title`),
   CONSTRAINT `fk_tour_content_area`
-    FOREIGN KEY (`area_code`) REFERENCES `META_AREA` (`area_code`),
+    FOREIGN KEY (`area_code`) REFERENCES `meta_area` (`area_code`),
   CONSTRAINT `fk_tour_content_sigungu`
-    FOREIGN KEY (`sigungu_id`) REFERENCES `META_SIGUNGU` (`sigungu_id`),
+    FOREIGN KEY (`sigungu_id`) REFERENCES `meta_sigungu` (`sigungu_id`),
   CONSTRAINT `fk_tour_content_type`
-    FOREIGN KEY (`content_type_id`) REFERENCES `META_CONTENT_TYPE` (`content_type_id`)
+    FOREIGN KEY (`content_type_id`) REFERENCES `meta_content_type` (`content_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `TOUR_CONTENT_IMAGE` (
+CREATE TABLE IF NOT EXISTS `tour_content_image` (
   `image_id` BIGINT NOT NULL AUTO_INCREMENT,
   `content_id` BIGINT NOT NULL,
   `image_name` VARCHAR(255),
@@ -105,18 +90,18 @@ CREATE TABLE IF NOT EXISTS `TOUR_CONTENT_IMAGE` (
   UNIQUE KEY `uq_tour_content_image_content_sort` (`content_id`, `sort_order`),
   KEY `idx_tour_content_image_content_id` (`content_id`),
   CONSTRAINT `fk_tour_content_image_content`
-    FOREIGN KEY (`content_id`) REFERENCES `TOUR_CONTENT` (`content_id`) ON DELETE CASCADE
+    FOREIGN KEY (`content_id`) REFERENCES `tour_content` (`content_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `TOUR_CONTENT_OVERVIEW` (
+CREATE TABLE IF NOT EXISTS `tour_content_overview` (
   `content_id` BIGINT NOT NULL,
   `overview` MEDIUMTEXT,
   PRIMARY KEY (`content_id`),
   CONSTRAINT `fk_tour_content_overview_content`
-    FOREIGN KEY (`content_id`) REFERENCES `TOUR_CONTENT` (`content_id`) ON DELETE CASCADE
+    FOREIGN KEY (`content_id`) REFERENCES `tour_content` (`content_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `DETAIL_TOURSPOT` (
+CREATE TABLE IF NOT EXISTS `detail_tourspot` (
   `content_id` BIGINT NOT NULL,
   `area_code` INT NOT NULL,
   `heritage1` VARCHAR(50),
@@ -137,12 +122,12 @@ CREATE TABLE IF NOT EXISTS `DETAIL_TOURSPOT` (
   PRIMARY KEY (`content_id`),
   KEY `idx_detail_tourspot_area_code` (`area_code`),
   CONSTRAINT `fk_detail_tourspot_content`
-    FOREIGN KEY (`content_id`) REFERENCES `TOUR_CONTENT` (`content_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`content_id`) REFERENCES `tour_content` (`content_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_detail_tourspot_area`
-    FOREIGN KEY (`area_code`) REFERENCES `META_AREA` (`area_code`)
+    FOREIGN KEY (`area_code`) REFERENCES `meta_area` (`area_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `DETAIL_CULTURE_FACILITY` (
+CREATE TABLE IF NOT EXISTS `detail_culture_facility` (
   `content_id` BIGINT NOT NULL,
   `area_code` INT NOT NULL,
   `accomcount` TEXT,
@@ -161,12 +146,12 @@ CREATE TABLE IF NOT EXISTS `DETAIL_CULTURE_FACILITY` (
   PRIMARY KEY (`content_id`),
   KEY `idx_detail_culture_facility_area_code` (`area_code`),
   CONSTRAINT `fk_detail_culture_facility_content`
-    FOREIGN KEY (`content_id`) REFERENCES `TOUR_CONTENT` (`content_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`content_id`) REFERENCES `tour_content` (`content_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_detail_culture_facility_area`
-    FOREIGN KEY (`area_code`) REFERENCES `META_AREA` (`area_code`)
+    FOREIGN KEY (`area_code`) REFERENCES `meta_area` (`area_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `DETAIL_FESTIVAL` (
+CREATE TABLE IF NOT EXISTS `detail_festival` (
   `content_id` BIGINT NOT NULL,
   `area_code` INT NOT NULL,
   `sponsor1` VARCHAR(255),
@@ -187,12 +172,12 @@ CREATE TABLE IF NOT EXISTS `DETAIL_FESTIVAL` (
   PRIMARY KEY (`content_id`),
   KEY `idx_detail_festival_area_code` (`area_code`),
   CONSTRAINT `fk_detail_festival_content`
-    FOREIGN KEY (`content_id`) REFERENCES `TOUR_CONTENT` (`content_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`content_id`) REFERENCES `tour_content` (`content_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_detail_festival_area`
-    FOREIGN KEY (`area_code`) REFERENCES `META_AREA` (`area_code`)
+    FOREIGN KEY (`area_code`) REFERENCES `meta_area` (`area_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `DETAIL_COURSE` (
+CREATE TABLE IF NOT EXISTS `detail_course` (
   `content_id` BIGINT NOT NULL,
   `area_code` INT NOT NULL,
   `distance` TEXT,
@@ -202,12 +187,12 @@ CREATE TABLE IF NOT EXISTS `DETAIL_COURSE` (
   PRIMARY KEY (`content_id`),
   KEY `idx_detail_course_area_code` (`area_code`),
   CONSTRAINT `fk_detail_course_content`
-    FOREIGN KEY (`content_id`) REFERENCES `TOUR_CONTENT` (`content_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`content_id`) REFERENCES `tour_content` (`content_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_detail_course_area`
-    FOREIGN KEY (`area_code`) REFERENCES `META_AREA` (`area_code`)
+    FOREIGN KEY (`area_code`) REFERENCES `meta_area` (`area_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `DETAIL_ACCOMMODATION` (
+CREATE TABLE IF NOT EXISTS `detail_accommodation` (
   `content_id` BIGINT NOT NULL,
   `area_code` INT NOT NULL,
   `accomcountlodging` TEXT,
@@ -243,12 +228,12 @@ CREATE TABLE IF NOT EXISTS `DETAIL_ACCOMMODATION` (
   PRIMARY KEY (`content_id`),
   KEY `idx_detail_accommodation_area_code` (`area_code`),
   CONSTRAINT `fk_detail_accommodation_content`
-    FOREIGN KEY (`content_id`) REFERENCES `TOUR_CONTENT` (`content_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`content_id`) REFERENCES `tour_content` (`content_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_detail_accommodation_area`
-    FOREIGN KEY (`area_code`) REFERENCES `META_AREA` (`area_code`)
+    FOREIGN KEY (`area_code`) REFERENCES `meta_area` (`area_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `DETAIL_SHOPPING` (
+CREATE TABLE IF NOT EXISTS `detail_shopping` (
   `content_id` BIGINT NOT NULL,
   `area_code` INT NOT NULL,
   `saleitem` TEXT,
@@ -268,12 +253,12 @@ CREATE TABLE IF NOT EXISTS `DETAIL_SHOPPING` (
   PRIMARY KEY (`content_id`),
   KEY `idx_detail_shopping_area_code` (`area_code`),
   CONSTRAINT `fk_detail_shopping_content`
-    FOREIGN KEY (`content_id`) REFERENCES `TOUR_CONTENT` (`content_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`content_id`) REFERENCES `tour_content` (`content_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_detail_shopping_area`
-    FOREIGN KEY (`area_code`) REFERENCES `META_AREA` (`area_code`)
+    FOREIGN KEY (`area_code`) REFERENCES `meta_area` (`area_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `DETAIL_RESTAURANT` (
+CREATE TABLE IF NOT EXISTS `detail_restaurant` (
   `content_id` BIGINT NOT NULL,
   `area_code` INT NOT NULL,
   `firstmenu` TEXT,
@@ -294,12 +279,12 @@ CREATE TABLE IF NOT EXISTS `DETAIL_RESTAURANT` (
   PRIMARY KEY (`content_id`),
   KEY `idx_detail_restaurant_area_code` (`area_code`),
   CONSTRAINT `fk_detail_restaurant_content`
-    FOREIGN KEY (`content_id`) REFERENCES `TOUR_CONTENT` (`content_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`content_id`) REFERENCES `tour_content` (`content_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_detail_restaurant_area`
-    FOREIGN KEY (`area_code`) REFERENCES `META_AREA` (`area_code`)
+    FOREIGN KEY (`area_code`) REFERENCES `meta_area` (`area_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `TOUR_CONTENT_REPEAT_INFO` (
+CREATE TABLE IF NOT EXISTS `tour_content_repeat_info` (
   `repeat_id` BIGINT NOT NULL AUTO_INCREMENT,
   `content_id` BIGINT NOT NULL,
   `content_type_id` INT NOT NULL,
@@ -310,12 +295,12 @@ CREATE TABLE IF NOT EXISTS `TOUR_CONTENT_REPEAT_INFO` (
   KEY `idx_tour_content_repeat_content_id` (`content_id`),
   KEY `idx_tour_content_repeat_type_id` (`content_type_id`),
   CONSTRAINT `fk_tour_content_repeat_content`
-    FOREIGN KEY (`content_id`) REFERENCES `TOUR_CONTENT` (`content_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`content_id`) REFERENCES `tour_content` (`content_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_tour_content_repeat_type`
-    FOREIGN KEY (`content_type_id`) REFERENCES `META_CONTENT_TYPE` (`content_type_id`)
+    FOREIGN KEY (`content_type_id`) REFERENCES `meta_content_type` (`content_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `TOUR_API_SYNC_HISTORY` (
+CREATE TABLE IF NOT EXISTS `tour_api_sync_history` (
   `sync_id` BIGINT NOT NULL AUTO_INCREMENT,
   `job_name` VARCHAR(100) NOT NULL,
   `area_code` INT,
@@ -332,7 +317,7 @@ CREATE TABLE IF NOT EXISTS `TOUR_API_SYNC_HISTORY` (
   KEY `idx_tour_api_sync_history_type_id` (`content_type_id`),
   KEY `idx_tour_api_sync_history_job_name` (`job_name`),
   CONSTRAINT `fk_tour_api_sync_history_area`
-    FOREIGN KEY (`area_code`) REFERENCES `META_AREA` (`area_code`),
+    FOREIGN KEY (`area_code`) REFERENCES `meta_area` (`area_code`),
   CONSTRAINT `fk_tour_api_sync_history_type`
-    FOREIGN KEY (`content_type_id`) REFERENCES `META_CONTENT_TYPE` (`content_type_id`)
+    FOREIGN KEY (`content_type_id`) REFERENCES `meta_content_type` (`content_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
