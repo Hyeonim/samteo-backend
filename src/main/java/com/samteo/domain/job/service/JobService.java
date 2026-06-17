@@ -54,7 +54,7 @@ public class JobService {
     public List<JobResponse> getJobs(int size) {
         CacheEntry cached = cache.get(size);
         if (cached != null && !cached.isExpired()) {
-            return cached.jobs();
+            return cached.getJobs();
         }
 
         URI uri = UriComponentsBuilder.fromUriString(baseUrl + "/empmnInfoList")
@@ -83,7 +83,7 @@ public class JobService {
         } catch (Exception e) {
             log.error("Gwanwangin API call failed: {}", e.getMessage());
             if (cached != null) {
-                return cached.jobs();
+                return cached.getJobs();
             }
             throw new RuntimeException("Failed to load jobs.");
         }
@@ -140,7 +140,19 @@ public class JobService {
         return raw.length() >= 10 ? raw.substring(0, 10) : raw;
     }
 
-    private record CacheEntry(List<JobResponse> jobs, long expiresAtMillis) {
+    private static class CacheEntry {
+
+        private final List<JobResponse> jobs;
+        private final long expiresAtMillis;
+
+        private CacheEntry(List<JobResponse> jobs, long expiresAtMillis) {
+            this.jobs = jobs;
+            this.expiresAtMillis = expiresAtMillis;
+        }
+
+        private List<JobResponse> getJobs() {
+            return jobs;
+        }
 
         private boolean isExpired() {
             return System.currentTimeMillis() >= expiresAtMillis;

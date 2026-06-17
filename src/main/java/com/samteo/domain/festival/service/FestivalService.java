@@ -38,7 +38,7 @@ public class FestivalService {
         YearMonth yearMonth = YearMonth.of(year, month);
         CacheEntry cached = cache.get(yearMonth);
         if (cached != null && !cached.isExpired()) {
-            return cached.festivals();
+            return cached.getFestivals();
         }
 
         List<FestivalResponse> festivals = List.copyOf(getLocalFestivals(yearMonth));
@@ -122,7 +122,19 @@ public class FestivalService {
         return token;
     }
 
-    private record CacheEntry(List<FestivalResponse> festivals, long expiresAtMillis) {
+    private static class CacheEntry {
+
+        private final List<FestivalResponse> festivals;
+        private final long expiresAtMillis;
+
+        private CacheEntry(List<FestivalResponse> festivals, long expiresAtMillis) {
+            this.festivals = festivals;
+            this.expiresAtMillis = expiresAtMillis;
+        }
+
+        private List<FestivalResponse> getFestivals() {
+            return festivals;
+        }
 
         private boolean isExpired() {
             return System.currentTimeMillis() >= expiresAtMillis;
