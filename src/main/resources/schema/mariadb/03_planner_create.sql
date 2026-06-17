@@ -94,3 +94,52 @@ CREATE TABLE IF NOT EXISTS `accommodation_tags` (
   CONSTRAINT `fk_accommodation_tags_accommodation`
     FOREIGN KEY (`accommodation_id`) REFERENCES `accommodations` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `personal_planners` (
+  `id` VARCHAR(36) NOT NULL,
+  `user_id` BIGINT NOT NULL,
+  `title` VARCHAR(100) NOT NULL,
+  `memo` TEXT,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_personal_planners_user_id` (`user_id`),
+  CONSTRAINT `fk_personal_planners_user`
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `planner_event_types` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `planner_id` VARCHAR(36) NOT NULL,
+  `value` VARCHAR(100),
+  `label` VARCHAR(20),
+  `color` VARCHAR(20),
+  `sort_order` INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_planner_event_types_planner_id` (`planner_id`),
+  CONSTRAINT `fk_planner_event_types_planner`
+    FOREIGN KEY (`planner_id`) REFERENCES `personal_planners` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `planner_schedules` (
+  `id` VARCHAR(36) NOT NULL,
+  `planner_id` VARCHAR(36) NOT NULL,
+  `title` VARCHAR(200),
+  `day` INT,
+  `start_time` VARCHAR(5),
+  `end_time` VARCHAR(5),
+  `type_value` VARCHAR(100),
+  `type_label` VARCHAR(20),
+  `color` VARCHAR(20),
+  `memo` TEXT,
+  `date_key` VARCHAR(10),
+  `repeat_mode` VARCHAR(20),
+  `locked` BOOLEAN NOT NULL DEFAULT FALSE,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_planner_schedules_planner_id` (`planner_id`),
+  KEY `idx_planner_schedules_date_key` (`date_key`),
+  CONSTRAINT `fk_planner_schedules_planner`
+    FOREIGN KEY (`planner_id`) REFERENCES `personal_planners` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
