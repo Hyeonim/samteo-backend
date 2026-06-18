@@ -9,8 +9,9 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
-
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,14 +59,13 @@ public class JobService {
         }
 
         URI uri = UriComponentsBuilder.fromUriString(baseUrl + "/empmnInfoList")
-                .queryParam("serviceKey", apiKey)
+                .queryParam("serviceKey", URLEncoder.encode(apiKey, StandardCharsets.UTF_8))
                 .queryParam("MobileOS", "ETC")
                 .queryParam("MobileApp", "samteo")
                 .queryParam("numOfRows", size)
                 .queryParam("pageNo", 1)
                 .queryParam("_type", "json")
-                .build()
-                .encode()
+                .build(true)
                 .toUri();
 
         try {
