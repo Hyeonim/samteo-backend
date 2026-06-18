@@ -73,7 +73,7 @@ jobs:
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           JWT_EXPIRATION=${{ vars.JWT_EXPIRATION || '86400000' }}
           ODSAY_API_KEY=${{ secrets.ODSAY_API_KEY }}
-          GWANWANGIN_API_KEY=${{ secrets.GWANWANGIN_API_KEY }}
+          TOUR_API_KEY=${{ secrets.TOUR_API_KEY }}
           KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
           KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
           KAKAO_REDIRECT_URI=${{ vars.KAKAO_REDIRECT_URI || 'https://www.samteo.org/login/oauth2/code/kakao' }}

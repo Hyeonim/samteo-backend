@@ -33,7 +33,7 @@ public class JobService {
     private final ObjectMapper objectMapper;
     private final Map<Integer, CacheEntry> cache = new ConcurrentHashMap<>();
 
-    @Value("${external.gwanwangin.api-key}")
+    @Value("${external.tourapi.api-key}")
     private String apiKey;
 
     @Value("${external.gwanwangin.base-url}")
