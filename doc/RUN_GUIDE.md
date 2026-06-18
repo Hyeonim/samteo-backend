@@ -31,6 +31,7 @@ src/main/resources/schema/mariadb/prod/00_prod_baseline_dump.sql
 src/main/resources/schema/mariadb/local-dev/10_local_dev_schema_delta.sql
 src/main/resources/schema/mariadb/local-dev/20_local_dev_seed_delta.sql
 src/main/resources/schema/mariadb/local-dev/30_local_dev_tour_api_compat_views.sql
+src/main/resources/schema/mariadb/local-dev/40_local_dev_planner_default_event_types.sql
 ```
 
 These scripts are mounted to:

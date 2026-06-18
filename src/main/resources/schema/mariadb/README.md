@@ -13,6 +13,7 @@
      - `10_local_dev_schema_delta.sql`
      - `20_local_dev_seed_delta.sql`
      - `30_local_dev_tour_api_compat_views.sql`
+     - `40_local_dev_planner_default_event_types.sql`
    - 운영 DB에 정식 테이블이 추가되면, 같은 이름의 호환 view는 만들지 않는다.
 
 3. `legacy-test/`
