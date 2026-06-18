@@ -27,9 +27,10 @@ password: samteo
 MariaDB init scripts:
 
 ```text
-src/main/resources/schema/mariadb/00_drop.sql
-src/main/resources/schema/mariadb/01_create.sql
-src/main/resources/schema/mariadb/02_init.sql
+src/main/resources/schema/mariadb/prod/00_prod_baseline_dump.sql
+src/main/resources/schema/mariadb/local-dev/10_local_dev_schema_delta.sql
+src/main/resources/schema/mariadb/local-dev/20_local_dev_seed_delta.sql
+src/main/resources/schema/mariadb/local-dev/30_local_dev_tour_api_compat_views.sql
 ```
 
 These scripts are mounted to:
@@ -39,6 +40,7 @@ These scripts are mounted to:
 ```
 
 They run automatically only when the MariaDB volume is first created.
+The local database is initialized from the production dump first, then local-only development deltas and compatibility migrations are applied.
 
 To reset local DB data:
 
