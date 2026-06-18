@@ -5,9 +5,11 @@ import com.samteo.domain.myplanner.dto.PersonalPlannerRequest;
 import com.samteo.domain.myplanner.dto.PersonalPlannerResponse;
 import com.samteo.domain.myplanner.dto.ScheduleDto;
 import com.samteo.domain.myplanner.entity.PersonalPlanner;
+import com.samteo.domain.myplanner.entity.PlannerDefaultEventType;
 import com.samteo.domain.myplanner.entity.PlannerEventType;
 import com.samteo.domain.myplanner.entity.PlannerSchedule;
 import com.samteo.domain.myplanner.repository.PersonalPlannerRepository;
+import com.samteo.domain.myplanner.repository.PlannerDefaultEventTypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,7 @@ import java.util.stream.IntStream;
 public class PersonalPlannerService {
 
     private final PersonalPlannerRepository personalPlannerRepository;
+    private final PlannerDefaultEventTypeRepository plannerDefaultEventTypeRepository;
 
     /**
      * 현재 사용자가 소유한 플래너 목록 전체를 조회한다.
@@ -50,7 +53,7 @@ public class PersonalPlannerService {
     @Transactional
     public PersonalPlannerResponse create(Long userId, PersonalPlannerRequest req) {
         PersonalPlanner planner = PersonalPlanner.create(normalizeId(req.getId()), userId, req.getTitle(), req.getMemo());
-        setEventTypes(planner, req.getEventTypes());
+        setEventTypes(planner, eventTypesOrDefaults(req.getEventTypes()));
         setSchedules(planner, req.getSchedule());
         return toResponse(personalPlannerRepository.save(planner));
     }
@@ -105,6 +108,24 @@ public class PersonalPlannerService {
         planner.replaceEventTypes(entities);
     }
 
+    private List<EventTypeDto> eventTypesOrDefaults(List<EventTypeDto> dtos) {
+        if (dtos != null && !dtos.isEmpty()) {
+            return dtos;
+        }
+        return defaultEventTypes();
+    }
+
+    private List<EventTypeDto> defaultEventTypes() {
+        return plannerDefaultEventTypeRepository.findAllByOrderBySortOrderAsc()
+                .stream()
+                .map(this::toEventTypeDto)
+                .collect(Collectors.toList());
+    }
+
+    private EventTypeDto toEventTypeDto(PlannerDefaultEventType type) {
+        return new EventTypeDto(type.getValue(), type.getLabel(), type.getColor());
+    }
+
     private void setSchedules(PersonalPlanner planner, List<ScheduleDto> dtos) {
         if (dtos == null) {
             planner.replaceSchedules(List.of());
@@ -134,6 +155,9 @@ public class PersonalPlannerService {
         List<EventTypeDto> eventTypeDtos = planner.getEventTypes().stream()
                 .map(et -> new EventTypeDto(et.getValue(), et.getLabel(), et.getColor()))
                 .collect(Collectors.toList());
+        if (eventTypeDtos.isEmpty()) {
+            eventTypeDtos = defaultEventTypes();
+        }
 
         List<ScheduleDto> scheduleDtos = planner.getSchedules().stream()
                 .map(s -> new ScheduleDto(
