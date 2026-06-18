@@ -35,7 +35,11 @@ public class SecurityConfig {
                                 "/api/planner/accommodations",
                                 "/api/planner/map-provider",
                                 "/api/regions",
-                                "/api/festivals"
+                                "/api/festivals",
+                                "/api/tour/spots",
+                                "/api/tour/festivals",
+                                "/api/tour/detail/common",
+                                "/api/tour/detail/intro"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
