@@ -37,7 +37,7 @@ public class TourApiService {
     private final Map<Long,   CacheEntry<TourDetailCommonResponse>>  detailCommonCache = new ConcurrentHashMap<>();
     private final Map<String, CacheEntry<Map<String, String>>>       detailIntroCache  = new ConcurrentHashMap<>();
 
-    @Value("${external.tourapi.service-key}")
+    @Value("${external.tourapi.api-key}")
     private String serviceKey;
 
     @Value("${external.tourapi.base-url}")
