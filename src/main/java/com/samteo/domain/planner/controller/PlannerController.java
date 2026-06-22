@@ -8,6 +8,7 @@ import com.samteo.domain.planner.dto.request.TransitRouteRequest;
 import com.samteo.domain.planner.dto.response.AccommodationResponse;
 import com.samteo.domain.planner.dto.response.BudgetSimulationResponse;
 import com.samteo.domain.planner.dto.response.JobResponse;
+import com.samteo.domain.planner.dto.response.JobPageResponse;
 import com.samteo.domain.planner.dto.response.MapProviderResponse;
 import com.samteo.domain.planner.dto.response.PlannerBootstrapResponse;
 import com.samteo.domain.planner.dto.response.PlannerResponse;
@@ -44,6 +45,16 @@ public class PlannerController {
             @RequestParam(required = false) String cityId
     ) {
         return ResponseEntity.ok(ApiResponse.success(plannerService.getJobs(regionId, cityId)));
+    }
+
+    @GetMapping("/jobs/page")
+    public ResponseEntity<ApiResponse<JobPageResponse>> getJobsPage(
+            @RequestParam(required = false) String regionId,
+            @RequestParam(required = false) String cityId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(plannerService.getJobsPage(regionId, cityId, page, size)));
     }
 
     @GetMapping("/accommodations")
