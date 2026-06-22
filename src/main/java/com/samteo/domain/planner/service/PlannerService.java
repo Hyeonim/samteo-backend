@@ -16,12 +16,17 @@ import com.samteo.domain.planner.repository.JobRepository;
 import com.samteo.domain.region.dto.response.RegionResponse;
 import com.samteo.domain.region.entity.Region;
 import com.samteo.domain.region.repository.RegionRepository;
+import com.samteo.domain.tourapi.dto.response.TourContentResponse;
+import com.samteo.domain.tourapi.service.TourApiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -35,6 +40,16 @@ public class PlannerService {
     private final RegionRepository regionRepository;
     private final JobRepository jobRepository;
     private final AccommodationRepository accommodationRepository;
+    private final TourApiService tourApiService;
+
+    private static final Map<String, String> LEGAL_DONG_REGION_CODES = Map.ofEntries(
+            Map.entry("서울", "11"), Map.entry("부산", "26"), Map.entry("대구", "27"),
+            Map.entry("인천", "28"), Map.entry("광주", "29"), Map.entry("대전", "30"),
+            Map.entry("울산", "31"), Map.entry("세종", "36"), Map.entry("경기", "41"),
+            Map.entry("충북", "43"), Map.entry("충남", "44"), Map.entry("전남", "46"),
+            Map.entry("경북", "47"), Map.entry("경남", "48"), Map.entry("제주", "50"),
+            Map.entry("강원", "51"), Map.entry("전북", "52")
+    );
 
     @Transactional(readOnly = true)
     public PlannerBootstrapResponse getBootstrapData() {
@@ -63,12 +78,86 @@ public class PlannerService {
 
     @Transactional(readOnly = true)
     public List<AccommodationResponse> getAccommodations(String regionId) {
-        List<Accommodation> accommodations = regionId == null
-                ? accommodationRepository.findAllByOrderByCommuteMinutesAsc()
-                : accommodationRepository.findByRegionIdOrderByCommuteMinutesAsc(regionId);
-        return accommodations.stream()
-                .map(AccommodationResponse::from)
+        List<Region> regions = regionRepository.findAll();
+        List<String> regionCodes = regionId == null
+                ? regions.stream()
+                    .map(Region::getName)
+                    .map(this::legalDongRegionCode)
+                    .filter(code -> code != null)
+                    .distinct()
+                    .toList()
+                : regionRepository.findById(regionId)
+                    .map(Region::getName)
+                    .map(this::legalDongRegionCode)
+                    .map(List::of)
+                    .orElse(List.of());
+
+        Map<Long, TourContentResponse> uniqueStays = new LinkedHashMap<>();
+        regionCodes.forEach(code -> tourApiService.getStays(code, 100, 1)
+                .forEach(stay -> uniqueStays.putIfAbsent(stay.getContentId(), stay)));
+
+        return uniqueStays.values().stream()
+                .map(stay -> toApiAccommodation(stay, regions))
+                .filter(response -> regionId == null || regionId.equals(response.getRegionId()))
                 .toList();
+    }
+
+    private String legalDongRegionCode(String regionName) {
+        if (regionName == null) return null;
+        return LEGAL_DONG_REGION_CODES.entrySet().stream()
+                .filter(entry -> regionName.startsWith(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private AccommodationResponse toApiAccommodation(TourContentResponse stay, List<Region> regions) {
+        String address = String.join(" ",
+                stay.getAddr1() == null ? "" : stay.getAddr1(),
+                stay.getAddr2() == null ? "" : stay.getAddr2()).trim();
+        Region matchedRegion = regions.stream()
+                .filter(region -> addressMatchesRegion(address, region.getName()))
+                .findFirst()
+                .orElse(null);
+        String district = matchedRegion == null
+                ? (stay.getAddr2() == null ? "지역 미분류" : stay.getAddr2())
+                : matchedRegion.getName();
+
+        return AccommodationResponse.builder()
+                .id(String.valueOf(stay.getContentId()))
+                .name(stay.getTitle())
+                .regionId(matchedRegion == null ? null : matchedRegion.getId())
+                .district(district)
+                .address(address)
+                .monthlyPrice(null)
+                .price(null)
+                .deposit(null)
+                .distanceKm(null)
+                .commuteMinutes(null)
+                .location(address)
+                .pos("월 비용 미제공")
+                .posType("neg")
+                .bg(stay.getFirstImage() == null || stay.getFirstImage().isBlank()
+                        ? "linear-gradient(135deg,#1e3a5f,#2d5a8e)"
+                        : "url('" + stay.getFirstImage() + "') center/cover")
+                .latitude(decimalOf(stay.getMapy()))
+                .longitude(decimalOf(stay.getMapx()))
+                .lat(decimalOf(stay.getMapy()))
+                .lng(decimalOf(stay.getMapx()))
+                .tags(List.of())
+                .source("TOUR_API_SEARCH_STAY2")
+                .imageUrl(stay.getFirstImage())
+                .build();
+    }
+
+    private boolean addressMatchesRegion(String address, String regionName) {
+        if (address == null || regionName == null) return false;
+        String[] parts = regionName.split(" ");
+        return java.util.Arrays.stream(parts).allMatch(address::contains);
+    }
+
+    private BigDecimal decimalOf(Double value) {
+        return value == null ? null : BigDecimal.valueOf(value);
     }
 
     public MapProviderResponse getMapProvider() {

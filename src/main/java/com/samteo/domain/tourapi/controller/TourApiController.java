@@ -24,7 +24,7 @@ public class TourApiController {
     private final TourApiService tourApiService;
 
     /**
-     * 지역기반 관광지 목록 (areaBasedList1)
+     * 지역기반 관광지 목록 (areaBasedList2)
      *
      * @param areaCode      지역코드 (선택, 예: 1=서울, 6=부산)
      * @param contentTypeId 콘텐츠 타입 (선택, 예: 12=관광지, 14=문화시설, 32=숙박, 39=음식점)
@@ -42,7 +42,7 @@ public class TourApiController {
     }
 
     /**
-     * 축제/공연/행사 목록 (searchFestival1)
+     * 축제/공연/행사 목록 (searchFestival2)
      *
      * @param eventStartDate 행사 시작일 이후 (YYYYMMDD, 기본 오늘)
      * @param areaCode       지역코드 (선택)
@@ -63,7 +63,7 @@ public class TourApiController {
     }
 
     /**
-     * 공통 상세정보 (detailCommon1) — 제목, 주소, 이미지, 개요 등
+     * 공통 상세정보 (detailCommon2) — 제목, 주소, 이미지, 개요 등
      *
      * @param contentId 콘텐츠 ID
      */
@@ -75,7 +75,7 @@ public class TourApiController {
     }
 
     /**
-     * 소개 상세정보 (detailIntro1) — 콘텐츠 타입별 고유 필드 (운영시간, 입장료, 주차 등)
+     * 소개 상세정보 (detailIntro2) — 콘텐츠 타입별 고유 필드 (운영시간, 입장료, 주차 등)
      *
      * @param contentId     콘텐츠 ID
      * @param contentTypeId 콘텐츠 타입 (12=관광지, 14=문화시설, 15=행사, 25=여행코스, 28=레포츠, 32=숙박, 38=쇼핑, 39=음식점)

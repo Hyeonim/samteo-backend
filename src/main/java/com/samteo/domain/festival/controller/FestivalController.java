@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -30,9 +29,7 @@ public class FestivalController {
      * @return 축제 목록 응답 래퍼
      */
     @GetMapping("/festivals")
-    public ResponseEntity<ApiResponse<List<FestivalResponse>>> getFestivals(
-            @RequestParam int year,
-            @RequestParam int month) {
-        return ResponseEntity.ok(ApiResponse.success(festivalService.getFestivals(year, month)));
+    public ResponseEntity<ApiResponse<List<FestivalResponse>>> getFestivals() {
+        return ResponseEntity.ok(ApiResponse.success(festivalService.getFestivals()));
     }
 }

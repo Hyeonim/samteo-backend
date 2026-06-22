@@ -6,54 +6,63 @@ import com.samteo.domain.tourapi.service.TourApiService;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class FestivalService {
 
     private static final Duration CACHE_TTL = Duration.ofHours(1);
-    private static final DateTimeFormatter YYYYMMDD = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final int EVENT_CONTENT_TYPE_ID = 15;
+    private static final int PAGE_SIZE = 1000;
+    private static final int MAX_PAGES = 20;
 
     private final TourApiService tourApiService;
-    private final Map<YearMonth, CacheEntry> cache = new ConcurrentHashMap<>();
+    private volatile CacheEntry cache;
 
     public FestivalService(TourApiService tourApiService) {
         this.tourApiService = tourApiService;
     }
 
-    public List<FestivalResponse> getFestivals(int year, int month) {
-        YearMonth yearMonth = YearMonth.of(year, month);
-        CacheEntry cached = cache.get(yearMonth);
+    public List<FestivalResponse> getFestivals() {
+        CacheEntry cached = cache;
         if (cached != null && !cached.isExpired()) {
             return cached.getFestivals();
         }
 
-        String eventStartDate = yearMonth.atDay(1).format(YYYYMMDD);
-        List<TourContentResponse> apiResults = tourApiService.getFestivals(eventStartDate, null, 100, 1);
+        List<TourContentResponse> apiResults = loadAllEvents();
 
         List<FestivalResponse> festivals = List.copyOf(
                 apiResults.stream()
                         .map(tc -> FestivalResponse.builder()
+                                .id(String.valueOf(tc.getContentId()))
                                 .title(tc.getTitle())
-                                .startDate(formatApiDate(tc.getEventStartDate()))
-                                .endDate(formatApiDate(tc.getEventEndDate()))
+                                .startDate(null)
+                                .endDate(null)
                                 .location(resolveLocalRegion(tc.getAreaCode(), tc.getAddr1()))
+                                .address(joinAddress(tc.getAddr1(), tc.getAddr2()))
+                                .imageUrl(tc.getFirstImage())
                                 .build())
                         .toList()
         );
 
-        cache.put(yearMonth, new CacheEntry(festivals, System.currentTimeMillis() + CACHE_TTL.toMillis()));
+        cache = new CacheEntry(festivals, System.currentTimeMillis() + CACHE_TTL.toMillis());
         return festivals;
     }
 
-    // API 날짜 형식 "20260701" → "2026-07-01"
-    private String formatApiDate(String raw) {
-        if (raw == null || raw.length() != 8) return raw;
-        return raw.substring(0, 4) + "-" + raw.substring(4, 6) + "-" + raw.substring(6, 8);
+    private List<TourContentResponse> loadAllEvents() {
+        List<TourContentResponse> events = new ArrayList<>();
+        for (int page = 1; page <= MAX_PAGES; page++) {
+            List<TourContentResponse> pageItems = tourApiService.getSpots(
+                    null, EVENT_CONTENT_TYPE_ID, PAGE_SIZE, page);
+            events.addAll(pageItems);
+            if (pageItems.size() < PAGE_SIZE) break;
+        }
+        return List.copyOf(events);
+    }
+
+    private String joinAddress(String addr1, String addr2) {
+        return String.join(" ", addr1 == null ? "" : addr1, addr2 == null ? "" : addr2).trim();
     }
 
     private String extractRegion(String addr) {

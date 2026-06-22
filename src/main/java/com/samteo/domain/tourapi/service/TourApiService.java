@@ -34,6 +34,7 @@ public class TourApiService {
 
     private final Map<String, CacheEntry<List<TourContentResponse>>> spotsCache     = new ConcurrentHashMap<>();
     private final Map<String, CacheEntry<List<TourContentResponse>>> festivalsCache  = new ConcurrentHashMap<>();
+    private final Map<String, CacheEntry<List<TourContentResponse>>> staysCache      = new ConcurrentHashMap<>();
     private final Map<Long,   CacheEntry<TourDetailCommonResponse>>  detailCommonCache = new ConcurrentHashMap<>();
     private final Map<String, CacheEntry<Map<String, String>>>       detailIntroCache  = new ConcurrentHashMap<>();
 
@@ -52,7 +53,7 @@ public class TourApiService {
     }
 
     // ------------------------------------------------------------------ //
-    //  관광지 목록 (areaBasedList1)
+    //  관광지 목록 (areaBasedList2)
     // ------------------------------------------------------------------ //
 
     public List<TourContentResponse> getSpots(Integer areaCode, Integer contentTypeId,
@@ -63,7 +64,7 @@ public class TourApiService {
             return cached.get();
         }
 
-        UriComponentsBuilder ub = UriComponentsBuilder.fromUriString(baseUrl + "/areaBasedList1")
+        UriComponentsBuilder ub = UriComponentsBuilder.fromUriString(baseUrl + "/areaBasedList2")
                 .queryParam("serviceKey", encodedKey())
                 .queryParam("MobileOS", "ETC")
                 .queryParam("MobileApp", "samteo")
@@ -79,7 +80,7 @@ public class TourApiService {
     }
 
     // ------------------------------------------------------------------ //
-    //  축제 목록 (searchFestival1)
+    //  축제 목록 (searchFestival2)
     // ------------------------------------------------------------------ //
 
     public List<TourContentResponse> getFestivals(String eventStartDate, Integer areaCode,
@@ -90,7 +91,7 @@ public class TourApiService {
             return cached.get();
         }
 
-        UriComponentsBuilder ub = UriComponentsBuilder.fromUriString(baseUrl + "/searchFestival1")
+        UriComponentsBuilder ub = UriComponentsBuilder.fromUriString(baseUrl + "/searchFestival2")
                 .queryParam("serviceKey", encodedKey())
                 .queryParam("MobileOS", "ETC")
                 .queryParam("MobileApp", "samteo")
@@ -105,8 +106,30 @@ public class TourApiService {
         return result;
     }
 
+    public List<TourContentResponse> getStays(String legalDongRegionCode,
+                                               int numOfRows, int pageNo) {
+        String key = "stays:" + legalDongRegionCode + ":" + numOfRows + ":" + pageNo;
+        CacheEntry<List<TourContentResponse>> cached = staysCache.get(key);
+        if (cached != null && !cached.isExpired()) {
+            return cached.get();
+        }
+
+        UriComponentsBuilder ub = UriComponentsBuilder.fromUriString(baseUrl + "/searchStay2")
+                .queryParam("serviceKey", encodedKey())
+                .queryParam("MobileOS", "ETC")
+                .queryParam("MobileApp", "samteo")
+                .queryParam("lDongRegnCd", legalDongRegionCode)
+                .queryParam("numOfRows", numOfRows)
+                .queryParam("pageNo", pageNo)
+                .queryParam("_type", "json");
+
+        List<TourContentResponse> result = fetchContentList(ub.build(true).toUri());
+        staysCache.put(key, new CacheEntry<>(result, LIST_CACHE_TTL));
+        return result;
+    }
+
     // ------------------------------------------------------------------ //
-    //  공통 상세정보 (detailCommon1)
+    //  공통 상세정보 (detailCommon2)
     // ------------------------------------------------------------------ //
 
     public TourDetailCommonResponse getDetailCommon(long contentId) {
@@ -115,7 +138,7 @@ public class TourApiService {
             return cached.get();
         }
 
-        URI uri = UriComponentsBuilder.fromUriString(baseUrl + "/detailCommon1")
+        URI uri = UriComponentsBuilder.fromUriString(baseUrl + "/detailCommon2")
                 .queryParam("serviceKey", encodedKey())
                 .queryParam("MobileOS", "ETC")
                 .queryParam("MobileApp", "samteo")
@@ -155,13 +178,13 @@ public class TourApiService {
             return response;
 
         } catch (Exception e) {
-            log.error("detailCommon1 API call failed contentId={}: {}", contentId, e.getMessage());
+            log.error("detailCommon2 API call failed contentId={}: {}", contentId, e.getMessage());
             throw new RuntimeException("관광정보 상세 조회에 실패했습니다.");
         }
     }
 
     // ------------------------------------------------------------------ //
-    //  소개 상세정보 (detailIntro1) - 타입별 필드가 달라 Map으로 반환
+    //  소개 상세정보 (detailIntro2) - 타입별 필드가 달라 Map으로 반환
     // ------------------------------------------------------------------ //
 
     public Map<String, String> getDetailIntro(long contentId, int contentTypeId) {
@@ -171,7 +194,7 @@ public class TourApiService {
             return cached.get();
         }
 
-        URI uri = UriComponentsBuilder.fromUriString(baseUrl + "/detailIntro1")
+        URI uri = UriComponentsBuilder.fromUriString(baseUrl + "/detailIntro2")
                 .queryParam("serviceKey", encodedKey())
                 .queryParam("MobileOS", "ETC")
                 .queryParam("MobileApp", "samteo")
@@ -196,7 +219,7 @@ public class TourApiService {
             return fields;
 
         } catch (Exception e) {
-            log.error("detailIntro1 API call failed contentId={}: {}", contentId, e.getMessage());
+            log.error("detailIntro2 API call failed contentId={}: {}", contentId, e.getMessage());
             throw new RuntimeException("관광정보 소개 조회에 실패했습니다.");
         }
     }
@@ -217,14 +240,14 @@ public class TourApiService {
             // data.go.kr 오류 응답 처리
             JsonNode resultCode = root.path("response").path("header").path("resultCode");
             if (!resultCode.isMissingNode() && !"0000".equals(resultCode.asText())) {
-                log.warn("TourAPI 오류 응답: {}", root.path("response").path("header").path("resultMsg").asText());
-                return List.of();
+                String resultMessage = root.path("response").path("header").path("resultMsg").asText();
+                throw new IllegalStateException("TourAPI error response: " + resultMessage);
             }
             JsonNode items = root.path("response").path("body").path("items").path("item");
             return List.copyOf(parseContentItems(items));
         } catch (Exception e) {
             log.error("TourAPI list call failed: {}", e.getMessage());
-            return List.of();
+            throw new RuntimeException("TourAPI list call failed.", e);
         }
     }
 

@@ -19,11 +19,11 @@ public class AccommodationResponse {
     private String regionId;
     private String district;
     private String address;
-    private int monthlyPrice;
-    private int price;
-    private int deposit;
+    private Integer monthlyPrice;
+    private Integer price;
+    private Integer deposit;
     private BigDecimal distanceKm;
-    private int commuteMinutes;
+    private Integer commuteMinutes;
     private String location;
     private String pos;
     private String posType;
@@ -34,6 +34,7 @@ public class AccommodationResponse {
     private BigDecimal lng;
     private List<String> tags;
     private String source;
+    private String imageUrl;
 
     public static AccommodationResponse from(Accommodation accommodation) {
         List<String> tags = accommodation.getTags() == null ? List.of() : new ArrayList<>(accommodation.getTags());
