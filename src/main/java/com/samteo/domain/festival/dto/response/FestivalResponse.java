@@ -11,6 +11,8 @@ import lombok.Getter;
 public class FestivalResponse {
 
     private String id;
+    private Integer contentTypeId;
+    private String category;
     private String title;
     private String startDate;
     private String endDate;
