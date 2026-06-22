@@ -37,6 +37,7 @@ public class SecurityConfig {
                                 "/api/regions",
                                 "/api/festivals",
                                 "/api/attractions",
+                                "/api/restaurants",
                                 "/api/tour/spots",
                                 "/api/tour/festivals",
                                 "/api/tour/detail/common",

@@ -12,6 +12,7 @@ public class FestivalService {
 
     private static final int ATTRACTION_CONTENT_TYPE_ID = 12;
     private static final int FESTIVAL_CONTENT_TYPE_ID = 15;
+    private static final int RESTAURANT_CONTENT_TYPE_ID = 39;
 
     private final TourApiService tourApiService;
 
@@ -25,6 +26,10 @@ public class FestivalService {
 
     public List<FestivalResponse> getAttractions(int numOfRows, int pageNo) {
         return getContents(ATTRACTION_CONTENT_TYPE_ID, "관광지", numOfRows, pageNo);
+    }
+
+    public List<FestivalResponse> getRestaurants(int numOfRows, int pageNo) {
+        return getContents(RESTAURANT_CONTENT_TYPE_ID, "식당", numOfRows, pageNo);
     }
 
     private List<FestivalResponse> getContents(
@@ -48,6 +53,9 @@ public class FestivalService {
                                 .location(resolveLocalRegion(tc.getAreaCode(), tc.getAddr1()))
                                 .address(joinAddress(tc.getAddr1(), tc.getAddr2()))
                                 .imageUrl(tc.getFirstImage())
+                                .latitude(tc.getMapy())
+                                .longitude(tc.getMapx())
+                                .tel(tc.getTel())
                                 .build())
                         .toList()
         );
