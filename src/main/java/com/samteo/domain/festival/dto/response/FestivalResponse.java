@@ -10,8 +10,11 @@ import lombok.Getter;
 @Builder
 public class FestivalResponse {
 
+    private String id;
     private String title;
     private String startDate;
     private String endDate;
     private String location;
+    private String address;
+    private String imageUrl;
 }
