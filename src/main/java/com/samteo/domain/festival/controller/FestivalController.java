@@ -45,6 +45,14 @@ public class FestivalController {
                 festivalService.getAttractions(normalizeSize(numOfRows), normalizePage(pageNo))));
     }
 
+    @GetMapping("/restaurants")
+    public ResponseEntity<ApiResponse<List<FestivalResponse>>> getRestaurants(
+            @RequestParam(defaultValue = "20") int numOfRows,
+            @RequestParam(defaultValue = "1") int pageNo) {
+        return ResponseEntity.ok(ApiResponse.success(
+                festivalService.getRestaurants(normalizeSize(numOfRows), normalizePage(pageNo))));
+    }
+
     private int normalizeSize(int size) {
         return Math.min(Math.max(size, 1), 100);
     }
