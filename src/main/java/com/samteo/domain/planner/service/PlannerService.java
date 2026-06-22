@@ -15,6 +15,8 @@ import com.samteo.domain.planner.repository.AccommodationRepository;
 import com.samteo.domain.planner.repository.JobRepository;
 import com.samteo.domain.region.dto.response.RegionResponse;
 import com.samteo.domain.region.entity.Region;
+import com.samteo.domain.region.entity.MetaRegion;
+import com.samteo.domain.region.repository.MetaRegionRepository;
 import com.samteo.domain.region.repository.RegionRepository;
 import com.samteo.domain.tourapi.dto.response.TourContentResponse;
 import com.samteo.domain.tourapi.service.TourApiService;
@@ -38,6 +40,7 @@ public class PlannerService {
     private static final int DEFAULT_EXTRA_COST = 70000;
 
     private final RegionRepository regionRepository;
+    private final MetaRegionRepository metaRegionRepository;
     private final JobRepository jobRepository;
     private final AccommodationRepository accommodationRepository;
     private final TourApiService tourApiService;
@@ -79,15 +82,17 @@ public class PlannerService {
     @Transactional(readOnly = true)
     public List<AccommodationResponse> getAccommodations(String regionId) {
         List<Region> regions = regionRepository.findAll();
+        List<MetaRegion> metaRegions = metaRegionRepository.findAllByOrderByIdAsc();
         List<String> regionCodes = regionId == null
-                ? regions.stream()
-                    .map(Region::getName)
+                ? metaRegions.stream()
+                    .map(MetaRegion::getName)
                     .map(this::legalDongRegionCode)
                     .filter(code -> code != null)
                     .distinct()
                     .toList()
-                : regionRepository.findById(regionId)
-                    .map(Region::getName)
+                : parseMetaRegionId(regionId)
+                    .flatMap(metaRegionRepository::findById)
+                    .map(MetaRegion::getName)
                     .map(this::legalDongRegionCode)
                     .map(List::of)
                     .orElse(List.of());
@@ -97,9 +102,17 @@ public class PlannerService {
                 .forEach(stay -> uniqueStays.putIfAbsent(stay.getContentId(), stay)));
 
         return uniqueStays.values().stream()
-                .map(stay -> toApiAccommodation(stay, regions))
+                .map(stay -> toApiAccommodation(stay, regions, metaRegions))
                 .filter(response -> regionId == null || regionId.equals(response.getRegionId()))
                 .toList();
+    }
+
+    private java.util.Optional<Integer> parseMetaRegionId(String regionId) {
+        try {
+            return java.util.Optional.of(Integer.valueOf(regionId));
+        } catch (NumberFormatException e) {
+            return java.util.Optional.empty();
+        }
     }
 
     private String legalDongRegionCode(String regionName) {
@@ -111,12 +124,21 @@ public class PlannerService {
                 .orElse(null);
     }
 
-    private AccommodationResponse toApiAccommodation(TourContentResponse stay, List<Region> regions) {
+    private AccommodationResponse toApiAccommodation(
+            TourContentResponse stay,
+            List<Region> regions,
+            List<MetaRegion> metaRegions
+    ) {
         String address = String.join(" ",
                 stay.getAddr1() == null ? "" : stay.getAddr1(),
                 stay.getAddr2() == null ? "" : stay.getAddr2()).trim();
         Region matchedRegion = regions.stream()
                 .filter(region -> addressMatchesRegion(address, region.getName()))
+                .findFirst()
+                .orElse(null);
+        MetaRegion matchedMetaRegion = metaRegions.stream()
+                .filter(region -> (stay.getAreaCode() != null && stay.getAreaCode().equals(region.getId()))
+                        || addressMatchesMetaRegion(address, region.getName()))
                 .findFirst()
                 .orElse(null);
         String district = matchedRegion == null
@@ -126,7 +148,7 @@ public class PlannerService {
         return AccommodationResponse.builder()
                 .id(String.valueOf(stay.getContentId()))
                 .name(stay.getTitle())
-                .regionId(matchedRegion == null ? null : matchedRegion.getId())
+                .regionId(matchedMetaRegion == null ? null : String.valueOf(matchedMetaRegion.getId()))
                 .district(district)
                 .address(address)
                 .monthlyPrice(null)
@@ -154,6 +176,17 @@ public class PlannerService {
         if (address == null || regionName == null) return false;
         String[] parts = regionName.split(" ");
         return java.util.Arrays.stream(parts).allMatch(address::contains);
+    }
+
+    private boolean addressMatchesMetaRegion(String address, String regionName) {
+        if (address == null || regionName == null) return false;
+        String normalized = regionName
+                .replace("특별자치시", "")
+                .replace("특별자치도", "")
+                .replace("특별시", "")
+                .replace("광역시", "")
+                .replace("도", "");
+        return address.contains(normalized);
     }
 
     private BigDecimal decimalOf(Double value) {

@@ -1,6 +1,7 @@
 package com.samteo.domain.region.dto.response;
 
 import com.samteo.domain.region.entity.Region;
+import com.samteo.domain.region.entity.MetaRegion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -47,6 +48,20 @@ public class RegionResponse {
                 .centerLongitude(region.getCenterLongitude())
                 .tags(tags)
                 .recommendationReasons(recommendationReasons)
+                .build();
+    }
+
+    public static RegionResponse from(MetaRegion region) {
+        return RegionResponse.builder()
+                .id(String.valueOf(region.getId()))
+                .name(region.getName())
+                .summary("체류할 지역을 선택해 주세요.")
+                .desc("체류할 지역을 선택해 주세요.")
+                .badge("REGION")
+                .badgeType("blue")
+                .bg("linear-gradient(160deg, #1e3a5f, #2d5a8e)")
+                .tags(List.of())
+                .recommendationReasons(List.of())
                 .build();
     }
 }
