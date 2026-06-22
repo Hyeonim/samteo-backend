@@ -4,6 +4,7 @@ import com.samteo.domain.region.dto.request.RegionRecommendationRequest;
 import com.samteo.domain.region.dto.response.RegionResponse;
 import com.samteo.domain.region.entity.Region;
 import com.samteo.domain.region.repository.RegionRepository;
+import com.samteo.domain.region.repository.MetaRegionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,11 +18,12 @@ import java.util.List;
 public class RegionService {
 
     private final RegionRepository regionRepository;
+    private final MetaRegionRepository metaRegionRepository;
     private final SecureRandom random = new SecureRandom();
 
     @Transactional(readOnly = true)
     public List<RegionResponse> getRegions() {
-        return regionRepository.findAll().stream()
+        return metaRegionRepository.findAllByOrderByIdAsc().stream()
                 .map(RegionResponse::from)
                 .toList();
     }
