@@ -36,6 +36,7 @@ public class SecurityConfig {
                                 "/api/planner/map-provider",
                                 "/api/regions",
                                 "/api/festivals",
+                                "/api/attractions",
                                 "/api/tour/spots",
                                 "/api/tour/festivals",
                                 "/api/tour/detail/common",

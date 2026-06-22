@@ -5,37 +5,43 @@ import com.samteo.domain.tourapi.dto.response.TourContentResponse;
 import com.samteo.domain.tourapi.service.TourApiService;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class FestivalService {
 
-    private static final Duration CACHE_TTL = Duration.ofHours(1);
-    private static final int EVENT_CONTENT_TYPE_ID = 15;
-    private static final int PAGE_SIZE = 1000;
-    private static final int MAX_PAGES = 20;
+    private static final int ATTRACTION_CONTENT_TYPE_ID = 12;
+    private static final int FESTIVAL_CONTENT_TYPE_ID = 15;
 
     private final TourApiService tourApiService;
-    private volatile CacheEntry cache;
 
     public FestivalService(TourApiService tourApiService) {
         this.tourApiService = tourApiService;
     }
 
-    public List<FestivalResponse> getFestivals() {
-        CacheEntry cached = cache;
-        if (cached != null && !cached.isExpired()) {
-            return cached.getFestivals();
-        }
+    public List<FestivalResponse> getFestivals(int numOfRows, int pageNo) {
+        return getContents(FESTIVAL_CONTENT_TYPE_ID, "축제", numOfRows, pageNo);
+    }
 
-        List<TourContentResponse> apiResults = loadAllEvents();
+    public List<FestivalResponse> getAttractions(int numOfRows, int pageNo) {
+        return getContents(ATTRACTION_CONTENT_TYPE_ID, "관광지", numOfRows, pageNo);
+    }
+
+    private List<FestivalResponse> getContents(
+            int contentTypeId,
+            String category,
+            int numOfRows,
+            int pageNo
+    ) {
+        List<TourContentResponse> apiResults = tourApiService.getSpots(
+                null, contentTypeId, numOfRows, pageNo);
 
         List<FestivalResponse> festivals = List.copyOf(
                 apiResults.stream()
                         .map(tc -> FestivalResponse.builder()
                                 .id(String.valueOf(tc.getContentId()))
+                                .contentTypeId(contentTypeId)
+                                .category(category)
                                 .title(tc.getTitle())
                                 .startDate(null)
                                 .endDate(null)
@@ -46,19 +52,7 @@ public class FestivalService {
                         .toList()
         );
 
-        cache = new CacheEntry(festivals, System.currentTimeMillis() + CACHE_TTL.toMillis());
         return festivals;
-    }
-
-    private List<TourContentResponse> loadAllEvents() {
-        List<TourContentResponse> events = new ArrayList<>();
-        for (int page = 1; page <= MAX_PAGES; page++) {
-            List<TourContentResponse> pageItems = tourApiService.getSpots(
-                    null, EVENT_CONTENT_TYPE_ID, PAGE_SIZE, page);
-            events.addAll(pageItems);
-            if (pageItems.size() < PAGE_SIZE) break;
-        }
-        return List.copyOf(events);
     }
 
     private String joinAddress(String addr1, String addr2) {
@@ -110,22 +104,4 @@ public class FestivalService {
         return token;
     }
 
-    private static class CacheEntry {
-
-        private final List<FestivalResponse> festivals;
-        private final long expiresAtMillis;
-
-        private CacheEntry(List<FestivalResponse> festivals, long expiresAtMillis) {
-            this.festivals = festivals;
-            this.expiresAtMillis = expiresAtMillis;
-        }
-
-        private List<FestivalResponse> getFestivals() {
-            return festivals;
-        }
-
-        private boolean isExpired() {
-            return System.currentTimeMillis() >= expiresAtMillis;
-        }
-    }
 }

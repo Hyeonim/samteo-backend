@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -29,7 +30,26 @@ public class FestivalController {
      * @return 축제 목록 응답 래퍼
      */
     @GetMapping("/festivals")
-    public ResponseEntity<ApiResponse<List<FestivalResponse>>> getFestivals() {
-        return ResponseEntity.ok(ApiResponse.success(festivalService.getFestivals()));
+    public ResponseEntity<ApiResponse<List<FestivalResponse>>> getFestivals(
+            @RequestParam(defaultValue = "20") int numOfRows,
+            @RequestParam(defaultValue = "1") int pageNo) {
+        return ResponseEntity.ok(ApiResponse.success(
+                festivalService.getFestivals(normalizeSize(numOfRows), normalizePage(pageNo))));
+    }
+
+    @GetMapping("/attractions")
+    public ResponseEntity<ApiResponse<List<FestivalResponse>>> getAttractions(
+            @RequestParam(defaultValue = "20") int numOfRows,
+            @RequestParam(defaultValue = "1") int pageNo) {
+        return ResponseEntity.ok(ApiResponse.success(
+                festivalService.getAttractions(normalizeSize(numOfRows), normalizePage(pageNo))));
+    }
+
+    private int normalizeSize(int size) {
+        return Math.min(Math.max(size, 1), 100);
+    }
+
+    private int normalizePage(int page) {
+        return Math.max(page, 1);
     }
 }
