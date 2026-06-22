@@ -32,6 +32,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/planner/bootstrap",
                                 "/api/planner/jobs",
+                                "/api/planner/jobs/page",
                                 "/api/planner/accommodations",
                                 "/api/planner/map-provider",
                                 "/api/regions",

@@ -16,6 +16,12 @@ public class JobResponse {
     private String company;
     private String location;
     private Integer wage;
+    private Integer hourlyWage;
+    private Integer monthlySalary;
+    private String employmentType;
+    private String education;
+    private String description;
     private String startDate;
     private String endDate;
+    private String sourceUrl;
 }

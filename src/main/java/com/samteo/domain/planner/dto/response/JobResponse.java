@@ -27,6 +27,7 @@ public class JobResponse {
     private String type;
     private String category;
     private String employmentType;
+    private int hourlyWage;
     private int monthlySalary;
     private int salary;
     private String workingDays;
@@ -43,6 +44,9 @@ public class JobResponse {
     private BigDecimal lng;
     private List<String> tags;
     private String source;
+    private String sourceUrl;
+    private String startDate;
+    private String endDate;
 
     public static JobResponse from(Job job) {
         List<String> tags = job.getTags() == null ? List.of() : new ArrayList<>(job.getTags());

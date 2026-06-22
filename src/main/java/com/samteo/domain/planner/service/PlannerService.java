@@ -6,6 +6,7 @@ import com.samteo.domain.planner.dto.response.AccommodationResponse;
 import com.samteo.domain.planner.dto.response.BudgetSimulationResponse;
 import com.samteo.domain.planner.dto.response.CalendarEventResponse;
 import com.samteo.domain.planner.dto.response.JobResponse;
+import com.samteo.domain.planner.dto.response.JobPageResponse;
 import com.samteo.domain.planner.dto.response.MapProviderResponse;
 import com.samteo.domain.planner.dto.response.PlannerBootstrapResponse;
 import com.samteo.domain.planner.dto.response.PlannerResponse;
@@ -39,11 +40,21 @@ public class PlannerService {
     private static final int DEFAULT_FOOD_COST = 220000;
     private static final int DEFAULT_EXTRA_COST = 70000;
 
+    private static final Map<String, String> ALIO_REGION_CODES = Map.ofEntries(
+            Map.entry("서울", "R3010"), Map.entry("인천", "R3011"), Map.entry("대전", "R3012"),
+            Map.entry("대구", "R3013"), Map.entry("부산", "R3014"), Map.entry("광주", "R3015"),
+            Map.entry("울산", "R3016"), Map.entry("경기", "R3017"), Map.entry("강원", "R3018"),
+            Map.entry("충남", "R3019"), Map.entry("충북", "R3020"), Map.entry("경북", "R3021"),
+            Map.entry("경남", "R3022"), Map.entry("전남", "R3023"), Map.entry("전북", "R3024"),
+            Map.entry("제주", "R3025"), Map.entry("세종", "R3026")
+    );
+
     private final RegionRepository regionRepository;
     private final MetaRegionRepository metaRegionRepository;
     private final JobRepository jobRepository;
     private final AccommodationRepository accommodationRepository;
     private final TourApiService tourApiService;
+    private final com.samteo.domain.job.service.JobService externalJobService;
 
     private static final Map<String, String> LEGAL_DONG_REGION_CODES = Map.ofEntries(
             Map.entry("서울", "11"), Map.entry("부산", "26"), Map.entry("대구", "27"),
@@ -66,17 +77,125 @@ public class PlannerService {
 
     @Transactional(readOnly = true)
     public List<JobResponse> getJobs(String regionId, String cityId) {
-        List<Job> jobs;
-        if (regionId != null) {
-            jobs = jobRepository.findByRegionId(regionId);
-        } else if (cityId != null) {
-            jobs = jobRepository.findByCityId(cityId);
-        } else {
-            jobs = jobRepository.findAll();
-        }
-        return jobs.stream()
-                .map(JobResponse::from)
+        return getJobsPage(regionId, cityId, 1, 100).getItems();
+    }
+
+    @Transactional(readOnly = true)
+    public JobPageResponse getJobsPage(String regionId, String cityId, int page, int size) {
+        String selectedId = regionId != null ? regionId : cityId;
+        List<MetaRegion> metaRegions = metaRegionRepository.findAllByOrderByIdAsc();
+        MetaRegion selectedRegion = resolveMetaRegion(selectedId, metaRegions);
+
+        String alioRegionCode = selectedRegion == null
+                ? null
+                : ALIO_REGION_CODES.get(shortRegionName(selectedRegion.getName()));
+
+        com.samteo.domain.job.service.JobService.JobPage externalPage =
+                externalJobService.getJobsPage(page, size, alioRegionCode);
+        List<JobResponse> items = externalPage.jobs().stream()
+                .filter(job -> selectedRegion == null || locationMatchesRegion(job.getLocation(), selectedRegion.getName()))
+                .map(job -> toAlioPlannerJob(job, selectedRegion == null
+                        ? findMatchingMetaRegion(job.getLocation(), metaRegions)
+                        : selectedRegion))
                 .toList();
+        int totalPages = (int) Math.ceil((double) externalPage.totalCount() / externalPage.size());
+        return JobPageResponse.builder()
+                .items(items)
+                .page(externalPage.page())
+                .size(externalPage.size())
+                .totalCount(externalPage.totalCount())
+                .totalPages(totalPages)
+                .hasNext(externalPage.page() < totalPages)
+                .build();
+    }
+
+    private MetaRegion resolveMetaRegion(String regionId, List<MetaRegion> metaRegions) {
+        if (regionId == null || regionId.isBlank()) return null;
+        java.util.Optional<Integer> numericId = parseMetaRegionId(regionId);
+        if (numericId.isPresent()) {
+            return metaRegions.stream().filter(region -> region.getId().equals(numericId.get())).findFirst().orElse(null);
+        }
+        Map<String, String> legacyNames = Map.ofEntries(
+                Map.entry("seoul", "서울"), Map.entry("busan", "부산"), Map.entry("daegu", "대구"),
+                Map.entry("incheon", "인천"), Map.entry("gwangju", "광주"), Map.entry("daejeon", "대전"),
+                Map.entry("ulsan", "울산"), Map.entry("sejong", "세종"), Map.entry("jeju", "제주")
+        );
+        String expected = legacyNames.getOrDefault(regionId.toLowerCase(), regionId);
+        return metaRegions.stream()
+                .filter(region -> shortRegionName(region.getName()).equals(expected))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private MetaRegion findMatchingMetaRegion(String location, List<MetaRegion> metaRegions) {
+        return metaRegions.stream()
+                .filter(region -> locationMatchesRegion(location, region.getName()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private JobResponse toAlioPlannerJob(
+            com.samteo.domain.job.dto.response.JobResponse job,
+            MetaRegion selectedRegion
+    ) {
+        String regionName = selectedRegion == null ? job.getLocation() : selectedRegion.getName();
+        int hourlyWage = job.getHourlyWage() == null ? 0 : job.getHourlyWage();
+        int monthlySalary = job.getMonthlySalary() == null ? hourlyWage * 209 : job.getMonthlySalary();
+        List<String> tags = java.util.stream.Stream.of(job.getType(), job.getEmploymentType(), job.getEducation())
+                .filter(value -> value != null && !value.isBlank())
+                .distinct()
+                .toList();
+
+        return JobResponse.builder()
+                .id(job.getId())
+                .name(job.getTitle())
+                .title(job.getTitle())
+                .company(job.getCompany())
+                .cityId(selectedRegion == null ? null : String.valueOf(selectedRegion.getId()))
+                .cityName(regionName)
+                .regionId(selectedRegion == null ? null : String.valueOf(selectedRegion.getId()))
+                .district(regionName)
+                .region(regionName)
+                .address(job.getLocation())
+                .type(job.getType())
+                .category(job.getType())
+                .employmentType(job.getEmploymentType())
+                .hourlyWage(hourlyWage)
+                .monthlySalary(monthlySalary)
+                .salary(monthlySalary)
+                .workingDays("공고 상세 확인")
+                .commuteMinutes(0)
+                .desc(job.getDescription() == null || job.getDescription().isBlank()
+                        ? job.getCompany() : job.getDescription())
+                .location(job.getLocation())
+                .priceLabel(String.format("%,d원", hourlyWage))
+                .unit("/시간")
+                .sub("기본 최저시급 · 플래너 완성 후 수정 가능")
+                .emoji("💼")
+                .tags(tags)
+                .source("ALIO")
+                .sourceUrl(job.getSourceUrl())
+                .startDate(job.getStartDate())
+                .endDate(job.getEndDate())
+                .build();
+    }
+
+    private boolean locationMatchesRegion(String location, String regionName) {
+        if (location == null || regionName == null) return false;
+        return location.contains(shortRegionName(regionName));
+    }
+
+    private String shortRegionName(String name) {
+        return name
+                .replace("서울특별시", "서울").replace("부산광역시", "부산")
+                .replace("대구광역시", "대구").replace("인천광역시", "인천")
+                .replace("광주광역시", "광주").replace("대전광역시", "대전")
+                .replace("울산광역시", "울산").replace("세종특별자치시", "세종")
+                .replace("경기도", "경기").replace("강원특별자치도", "강원")
+                .replace("충청북도", "충북").replace("충청남도", "충남")
+                .replace("전북특별자치도", "전북").replace("전라남도", "전남")
+                .replace("경상북도", "경북").replace("경상남도", "경남")
+                .replace("제주특별자치도", "제주");
     }
 
     @Transactional(readOnly = true)

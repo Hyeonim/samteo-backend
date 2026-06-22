@@ -5,87 +5,91 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.samteo.domain.job.dto.response.JobResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.util.UriComponentsBuilder;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * 관광 일자리 API와 연동하여 원본 응답을 서비스용 DTO로 정규화한다.
- */
+/** ALIO 공공기관 채용 공고를 서비스 응답 형식으로 변환한다. */
 @Slf4j
 @Service
 public class JobService {
 
+    private static final int MONTHLY_WORK_HOURS = 209;
     private static final Duration CACHE_TTL = Duration.ofMinutes(10);
-    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(3);
-    private static final Duration READ_TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(15);
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
-    private final Map<Integer, CacheEntry> cache = new ConcurrentHashMap<>();
+    private final Map<String, JobPage> cache = new ConcurrentHashMap<>();
 
-    @Value("${external.tourapi.api-key}")
+    @Value("${external.alio.api-key:}")
     private String apiKey;
 
-    @Value("${external.gwanwangin.base-url}")
+    @Value("${external.alio.base-url}")
     private String baseUrl;
 
+    @Value("${jobs.default-hourly-wage:10320}")
+    private int defaultHourlyWage;
+
     public JobService(RestClient.Builder restClientBuilder, ObjectMapper objectMapper) {
-        this.restClient = restClientBuilder
-                .requestFactory(requestFactory())
-                .build();
+        this.restClient = restClientBuilder.requestFactory(requestFactory()).build();
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * 외부 API에서 채용 공고를 조회하고 응답 객체 목록으로 변환한다.
-     *
-     * @param size 외부 API에 요청할 공고 개수
-     * @return 정규화된 채용 공고 목록
-     */
-    public List<JobResponse> getJobs(int size) {
-        CacheEntry cached = cache.get(size);
-        if (cached != null && !cached.isExpired()) {
-            return cached.getJobs();
-        }
+    public List<JobResponse> getJobs(int requestedSize) {
+        return getJobs(requestedSize, null);
+    }
 
-        URI uri = UriComponentsBuilder.fromUriString(baseUrl + "/empmnInfoList")
-                .queryParam("serviceKey", URLEncoder.encode(apiKey, StandardCharsets.UTF_8))
-                .queryParam("MobileOS", "ETC")
-                .queryParam("MobileApp", "samteo")
-                .queryParam("numOfRows", size)
-                .queryParam("pageNo", 1)
-                .queryParam("_type", "json")
-                .build(true)
-                .toUri();
+    public List<JobResponse> getJobs(int requestedSize, String workRegionCode) {
+        return getJobsPage(1, requestedSize, workRegionCode).jobs();
+    }
+
+    public JobPage getJobsPage(int requestedPage, int requestedSize, String workRegionCode) {
+        int page = Math.max(1, requestedPage);
+        int size = normalizeSize(requestedSize);
+        String cacheKey = page + ":" + size + ":" + (workRegionCode == null ? "ALL" : workRegionCode);
+        JobPage cached = cache.get(cacheKey);
+        if (cached != null && !cached.isExpired()) return cached;
+
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("pageNo", String.valueOf(page));
+        form.add("pageSet", String.valueOf(size));
+        form.add("numOfRows", String.valueOf(size));
+        form.add("ongoingYn", "Y");
+        if (workRegionCode != null && !workRegionCode.isBlank()) {
+            form.add("workRgnLst", workRegionCode);
+        }
+        if (apiKey != null && !apiKey.isBlank()) form.add("serviceKey", apiKey);
 
         try {
-            String body = restClient.get()
-                    .uri(uri)
+            String body = restClient.post()
+                    .uri(baseUrl)
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(form)
                     .retrieve()
                     .body(String.class);
-
-            JsonNode items = objectMapper.readTree(body)
-                    .path("response").path("body").path("items").path("item");
-
-            List<JobResponse> jobs = List.copyOf(parseItems(items));
-            cache.put(size, new CacheEntry(jobs, System.currentTimeMillis() + CACHE_TTL.toMillis()));
-            return jobs;
+            JsonNode data = objectMapper.readTree(body).path("data");
+            JsonNode items = data.path("result");
+            List<JobResponse> jobs = List.copyOf(parseItems(items).stream().limit(size).toList());
+            long totalCount = data.path("totalCount").asLong(jobs.size());
+            JobPage result = new JobPage(jobs, page, size, totalCount,
+                    System.currentTimeMillis() + CACHE_TTL.toMillis());
+            cache.put(cacheKey, result);
+            return result;
         } catch (Exception e) {
-            log.error("Gwanwangin API call failed: {}", e.getMessage());
-            if (cached != null) {
-                return cached.getJobs();
-            }
-            throw new RuntimeException("Failed to load jobs.");
+            log.error("ALIO recruitment API call failed: {}", e.getMessage());
+            if (cached != null) return cached;
+            throw new RuntimeException("ALIO 채용 정보를 불러오지 못했습니다.", e);
         }
     }
 
@@ -98,64 +102,57 @@ public class JobService {
 
     private List<JobResponse> parseItems(JsonNode items) {
         List<JobResponse> result = new ArrayList<>();
-        if (items.isArray()) {
-            items.forEach(item -> result.add(mapToJobResponse(item)));
-        } else if (!items.isMissingNode() && !items.isNull()) {
-            result.add(mapToJobResponse(items));
-        }
+        if (items.isArray()) items.forEach(item -> result.add(mapToJobResponse(item)));
         return result;
     }
 
     private JobResponse mapToJobResponse(JsonNode item) {
+        String category = firstText(item, "ncsCdNmLst", "recrutSeNm");
+        String qualification = textOf(item, "aplyQlfcCn");
         return JobResponse.builder()
-                .id(textOf(item, "empmnInfoNo"))
-                .type(textOf(item, "uprRcritJssfcCd"))
-                .title(textOf(item, "empmnTtl"))
-                .company(textOf(item, "corpoNm"))
-                .location(textOf(item, "wrkpAdres"))
-                .wage(intOf(item, "wageAmt"))
-                .startDate(extractDate(textOf(item, "regDt")))
-                .endDate(extractDate(textOf(item, "rcptDdlnDe")))
+                .id(textOf(item, "recrutPblntSn"))
+                .type(category)
+                .title(textOf(item, "recrutPbancTtl"))
+                .company(textOf(item, "instNm"))
+                .location(textOf(item, "workRgnNmLst"))
+                .wage(defaultHourlyWage)
+                .hourlyWage(defaultHourlyWage)
+                .monthlySalary(defaultHourlyWage * MONTHLY_WORK_HOURS)
+                .employmentType(textOf(item, "hireTypeNmLst"))
+                .education(textOf(item, "acbgCondNmLst"))
+                .description(qualification)
+                .startDate(formatDate(textOf(item, "pbancBgngYmd")))
+                .endDate(formatDate(textOf(item, "pbancEndYmd")))
+                .sourceUrl(textOf(item, "srcUrl"))
                 .build();
+    }
+
+    private int normalizeSize(int size) {
+        if (size <= 10) return 10;
+        if (size <= 20) return 20;
+        if (size <= 50) return 50;
+        return 100;
+    }
+
+    private String firstText(JsonNode node, String... fields) {
+        for (String field : fields) {
+            String value = textOf(node, field);
+            if (value != null && !value.isBlank()) return value;
+        }
+        return null;
     }
 
     private String textOf(JsonNode node, String field) {
         JsonNode value = node.get(field);
-        return (value != null && !value.isNull()) ? value.asText() : null;
+        return value == null || value.isNull() ? null : value.asText();
     }
 
-    private Integer intOf(JsonNode node, String field) {
-        JsonNode value = node.get(field);
-        if (value == null || value.isNull()) {
-            return null;
-        }
-        String digits = value.asText().replaceAll("[^0-9]", "");
-        return digits.isEmpty() ? null : Integer.parseInt(digits);
+    private String formatDate(String raw) {
+        if (raw == null || raw.length() != 8) return raw;
+        return raw.substring(0, 4) + "-" + raw.substring(4, 6) + "-" + raw.substring(6, 8);
     }
 
-    private String extractDate(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return null;
-        }
-        return raw.length() >= 10 ? raw.substring(0, 10) : raw;
-    }
-
-    private static class CacheEntry {
-
-        private final List<JobResponse> jobs;
-        private final long expiresAtMillis;
-
-        private CacheEntry(List<JobResponse> jobs, long expiresAtMillis) {
-            this.jobs = jobs;
-            this.expiresAtMillis = expiresAtMillis;
-        }
-
-        private List<JobResponse> getJobs() {
-            return jobs;
-        }
-
-        private boolean isExpired() {
-            return System.currentTimeMillis() >= expiresAtMillis;
-        }
+    public record JobPage(List<JobResponse> jobs, int page, int size, long totalCount, long expiresAtMillis) {
+        private boolean isExpired() { return System.currentTimeMillis() >= expiresAtMillis; }
     }
 }
