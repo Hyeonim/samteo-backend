@@ -55,9 +55,10 @@ public class PlannerController {
             @RequestParam(required = false) String regionId,
             @RequestParam(required = false) String cityId,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "long") String type
     ) {
-        return ResponseEntity.ok(ApiResponse.success(plannerService.getJobsPage(regionId, cityId, page, size)));
+        return ResponseEntity.ok(ApiResponse.success(plannerService.getJobsPage(regionId, cityId, page, size, type)));
     }
 
     @GetMapping("/accommodations")

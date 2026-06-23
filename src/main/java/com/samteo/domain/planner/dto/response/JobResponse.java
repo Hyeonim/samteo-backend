@@ -52,6 +52,7 @@ public class JobResponse {
         List<String> tags = job.getTags() == null ? List.of() : new ArrayList<>(job.getTags());
         String category = toKoreanCategory(job.getCategory());
         String employmentType = toKoreanEmploymentType(job.getEmploymentType());
+        int hourlyWage = job.getMonthlySalary() > 0 ? Math.round((float) job.getMonthlySalary() / 209) : 0;
         return JobResponse.builder()
                 .id(job.getId())
                 .name(job.getTitle())
@@ -66,22 +67,23 @@ public class JobResponse {
                 .type(category)
                 .category(category)
                 .employmentType(employmentType)
+                .hourlyWage(hourlyWage)
                 .monthlySalary(job.getMonthlySalary())
                 .salary(job.getMonthlySalary())
                 .workingDays(toKoreanWorkingDays(job.getWorkingDays()))
                 .commuteMinutes(job.getCommuteMinutes())
-                .desc(job.getCompany() + " / " + toKoreanWorkingDays(job.getWorkingDays()))
-                .location(job.getAddress() == null ? job.getDistrict() + " / commute " + job.getCommuteMinutes() + " min" : job.getAddress())
-                .priceLabel(job.getMonthlySalary() == 0 ? "-" : job.getMonthlySalary() + "원")
-                .unit("/월")
-                .sub("샘플 일자리 데이터")
+                .desc(job.getCompany() + " · " + toKoreanWorkingDays(job.getWorkingDays()))
+                .location(job.getAddress() != null ? job.getAddress() : job.getDistrict())
+                .priceLabel(hourlyWage == 0 ? "-" : String.format("%,d원", hourlyWage))
+                .unit("/시간")
+                .sub("단기 알바")
                 .emoji(toJobEmoji(job.getCategory()))
                 .latitude(job.getLatitude())
                 .longitude(job.getLongitude())
                 .lat(job.getLatitude())
                 .lng(job.getLongitude())
                 .tags(tags.stream().map(JobResponse::toKoreanTag).toList())
-                .source("HR_DUMMY")
+                .source("SHORT_TERM")
                 .build();
     }
 

@@ -65,6 +65,9 @@ public class PersonalPlanner {
     @Column(name = "jobs_json", columnDefinition = "TEXT")
     private String jobsJson;
 
+    @Column(name = "planner_type", length = 20)
+    private String plannerType;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -120,6 +123,10 @@ public class PersonalPlanner {
         this.fixedExpense = fixedExpense;
         this.accommodationJson = accommodationJson;
         this.jobsJson = jobsJson;
+    }
+
+    public void updatePlannerType(String plannerType) {
+        this.plannerType = plannerType;
     }
 
     /**

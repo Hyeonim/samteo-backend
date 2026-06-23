@@ -71,6 +71,7 @@ public class PersonalPlannerService {
                 toJson(req.getAccommodation()),
                 toJson(req.getJobs())
         );
+        planner.updatePlannerType(req.getPlannerType());
         return toResponse(personalPlannerRepository.save(planner));
     }
 
@@ -97,6 +98,7 @@ public class PersonalPlannerService {
                 toJson(req.getAccommodation()),
                 toJson(req.getJobs())
         );
+        if (req.getPlannerType() != null) planner.updatePlannerType(req.getPlannerType());
         return toResponse(planner);
     }
 
@@ -222,6 +224,7 @@ public class PersonalPlannerService {
                 .fixedExpense(planner.getFixedExpense())
                 .accommodation(fromJson(planner.getAccommodationJson(), new TypeReference<Map<String, Object>>() {}))
                 .jobs(fromJson(planner.getJobsJson(), new TypeReference<List<Map<String, Object>>>() {}))
+                .plannerType(planner.getPlannerType())
                 .build();
     }
 

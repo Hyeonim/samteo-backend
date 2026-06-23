@@ -23,6 +23,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
 import java.time.LocalDate;
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
@@ -74,11 +77,19 @@ public class PlannerService {
 
     @Transactional(readOnly = true)
     public List<JobResponse> getJobs(String regionId, String cityId) {
-        return getJobsPage(regionId, cityId, 1, 100).getItems();
+        return getJobsPage(regionId, cityId, 1, 100, "long").getItems();
     }
 
     @Transactional(readOnly = true)
     public JobPageResponse getJobsPage(String regionId, String cityId, int page, int size) {
+        return getJobsPage(regionId, cityId, page, size, "long");
+    }
+
+    @Transactional(readOnly = true)
+    public JobPageResponse getJobsPage(String regionId, String cityId, int page, int size, String type) {
+        if ("short".equals(type)) {
+            return getShortTermJobsPage(cityId != null ? cityId : regionId, page, size);
+        }
         String selectedId = regionId != null ? regionId : cityId;
         List<MetaRegion> metaRegions = metaRegionRepository.findAllByOrderByIdAsc();
         MetaRegion selectedRegion = resolveMetaRegion(selectedId, metaRegions);
@@ -104,6 +115,31 @@ public class PlannerService {
                 .totalPages(totalPages)
                 .hasNext(externalPage.page() < totalPages)
                 .build();
+    }
+
+    private JobPageResponse getShortTermJobsPage(String cityId, int page, int size) {
+        PageRequest pageable = PageRequest.of(page - 1, size);
+        Page<Job> dbPage;
+        if (cityId == null || cityId.isBlank()) {
+            dbPage = jobRepository.findAll(pageable);
+        } else if (isNumericId(cityId)) {
+            // Step1Region이 meta_region의 숫자 ID를 전달 → region_id 기준으로 조회
+            dbPage = jobRepository.findByRegionId(cityId, pageable);
+        } else {
+            // 영문 city_id 직접 조회 (e.g. 'seoul')
+            dbPage = jobRepository.findByCityId(cityId, pageable);
+        }
+        long total = dbPage.getTotalElements();
+        int totalPages = (int) Math.ceil((double) total / size);
+        return JobPageResponse.builder()
+                .items(dbPage.getContent().stream().map(JobResponse::from).toList())
+                .page(page).size(size).totalCount(total)
+                .totalPages(totalPages).hasNext(page < totalPages)
+                .build();
+    }
+
+    private boolean isNumericId(String id) {
+        try { Integer.parseInt(id); return true; } catch (NumberFormatException e) { return false; }
     }
 
     private MetaRegion resolveMetaRegion(String regionId, List<MetaRegion> metaRegions) {
