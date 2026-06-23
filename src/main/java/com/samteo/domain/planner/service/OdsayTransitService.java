@@ -107,6 +107,44 @@ public class OdsayTransitService {
         return searchTransitRoutes(request, origin, destination);
     }
 
+    public JsonNode loadLane(String mapObject) {
+        requireOdsayKey();
+        if (!StringUtils.hasText(mapObject)) {
+            throw new IllegalArgumentException("mapObject is required.");
+        }
+
+        URI uri = UriComponentsBuilder.fromUriString(baseUrl + "/loadLane")
+                .queryParam("mapObject", mapObject)
+                .queryParam("output", "json")
+                .queryParam("apiKey", apiKey)
+                .build()
+                .encode()
+                .toUri();
+
+        try {
+            String body = restClient.get()
+                    .uri(uri)
+                    .retrieve()
+                    .body(String.class);
+
+            JsonNode raw = objectMapper.readTree(body);
+            JsonNode error = raw.path("error");
+            if (!error.isMissingNode()) {
+                String message = error.path("message").asText("ODsay lane search failed.");
+                throw new IllegalArgumentException("ODsay error: " + message);
+            }
+            return raw;
+        } catch (RestClientException e) {
+            log.error("ODsay lane API call failed: {}", e.getMessage());
+            throw new RuntimeException("ODsay lane API call failed.");
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("ODsay lane response parsing failed: {}", e.getMessage());
+            throw new RuntimeException("ODsay lane response parsing failed.");
+        }
+    }
+
     private TransitRouteResponse searchTransitRoutes(
             TransitRouteRequest request,
             TransitAnchorResponse origin,
