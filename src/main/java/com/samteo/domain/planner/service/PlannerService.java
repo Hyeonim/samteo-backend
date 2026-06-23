@@ -15,10 +15,8 @@ import com.samteo.domain.planner.entity.Job;
 import com.samteo.domain.planner.repository.AccommodationRepository;
 import com.samteo.domain.planner.repository.JobRepository;
 import com.samteo.domain.region.dto.response.RegionResponse;
-import com.samteo.domain.region.entity.Region;
 import com.samteo.domain.region.entity.MetaRegion;
 import com.samteo.domain.region.repository.MetaRegionRepository;
-import com.samteo.domain.region.repository.RegionRepository;
 import com.samteo.domain.tourapi.dto.response.TourContentResponse;
 import com.samteo.domain.tourapi.service.TourApiService;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +47,6 @@ public class PlannerService {
             Map.entry("제주", "R3025"), Map.entry("세종", "R3026")
     );
 
-    private final RegionRepository regionRepository;
     private final MetaRegionRepository metaRegionRepository;
     private final JobRepository jobRepository;
     private final AccommodationRepository accommodationRepository;
@@ -68,7 +65,7 @@ public class PlannerService {
     @Transactional(readOnly = true)
     public PlannerBootstrapResponse getBootstrapData() {
         return PlannerBootstrapResponse.builder()
-                .regions(regionRepository.findAll().stream().map(RegionResponse::from).toList())
+                .regions(metaRegionRepository.findAllByOrderByIdAsc().stream().map(RegionResponse::from).toList())
                 .jobs(getJobs(null, null))
                 .accommodations(getAccommodations(null))
                 .mapProvider(getMapProvider())
@@ -200,7 +197,6 @@ public class PlannerService {
 
     @Transactional(readOnly = true)
     public List<AccommodationResponse> getAccommodations(String regionId) {
-        List<Region> regions = regionRepository.findAll();
         List<MetaRegion> metaRegions = metaRegionRepository.findAllByOrderByIdAsc();
         List<String> regionCodes = regionId == null
                 ? metaRegions.stream()
@@ -221,7 +217,7 @@ public class PlannerService {
                 .forEach(stay -> uniqueStays.putIfAbsent(stay.getContentId(), stay)));
 
         return uniqueStays.values().stream()
-                .map(stay -> toApiAccommodation(stay, regions, metaRegions))
+                .map(stay -> toApiAccommodation(stay, metaRegions))
                 .filter(response -> regionId == null || regionId.equals(response.getRegionId()))
                 .toList();
     }
@@ -245,24 +241,19 @@ public class PlannerService {
 
     private AccommodationResponse toApiAccommodation(
             TourContentResponse stay,
-            List<Region> regions,
             List<MetaRegion> metaRegions
     ) {
         String address = String.join(" ",
                 stay.getAddr1() == null ? "" : stay.getAddr1(),
                 stay.getAddr2() == null ? "" : stay.getAddr2()).trim();
-        Region matchedRegion = regions.stream()
-                .filter(region -> addressMatchesRegion(address, region.getName()))
-                .findFirst()
-                .orElse(null);
         MetaRegion matchedMetaRegion = metaRegions.stream()
                 .filter(region -> (stay.getAreaCode() != null && stay.getAreaCode().equals(region.getId()))
                         || addressMatchesMetaRegion(address, region.getName()))
                 .findFirst()
                 .orElse(null);
-        String district = matchedRegion == null
-                ? (stay.getAddr2() == null ? "지역 미분류" : stay.getAddr2())
-                : matchedRegion.getName();
+        String district = stay.getAddr2() == null || stay.getAddr2().isBlank()
+                ? (matchedMetaRegion == null ? "지역 미분류" : matchedMetaRegion.getName())
+                : stay.getAddr2();
 
         return AccommodationResponse.builder()
                 .id(String.valueOf(stay.getContentId()))
@@ -289,12 +280,6 @@ public class PlannerService {
                 .source("TOUR_API_SEARCH_STAY2")
                 .imageUrl(stay.getFirstImage())
                 .build();
-    }
-
-    private boolean addressMatchesRegion(String address, String regionName) {
-        if (address == null || regionName == null) return false;
-        String[] parts = regionName.split(" ");
-        return java.util.Arrays.stream(parts).allMatch(address::contains);
     }
 
     private boolean addressMatchesMetaRegion(String address, String regionName) {
@@ -349,7 +334,8 @@ public class PlannerService {
     }
 
     public PlannerResponse createPlanner(PlannerCreateRequest request) {
-        Region region = regionRepository.findById(request.getRegionId())
+        MetaRegion region = parseMetaRegionId(request.getRegionId())
+                .flatMap(metaRegionRepository::findById)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown regionId: " + request.getRegionId()));
         List<Job> jobs = request.getJobIds().stream().map(this::findJob).toList();
         if (jobs.isEmpty()) {
