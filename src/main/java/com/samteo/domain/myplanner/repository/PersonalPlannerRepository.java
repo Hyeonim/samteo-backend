@@ -19,6 +19,8 @@ public interface PersonalPlannerRepository extends JpaRepository<PersonalPlanner
      */
     List<PersonalPlanner> findAllByUserId(Long userId);
 
+    Optional<PersonalPlanner> findFirstByUserIdOrderByUpdatedAtDesc(Long userId);
+
     /**
      * 플래너 ID와 사용자 ID로 단일 플래너를 조회하여 소유권을 검증한다.
      *
