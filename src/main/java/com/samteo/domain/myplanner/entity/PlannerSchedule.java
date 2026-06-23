@@ -79,6 +79,25 @@ public class PlannerSchedule {
     }
 
     /**
+     * 스케줄 항목의 필드를 제자리에서 업데이트한다.
+     */
+    public void update(String title, int day, String startTime, String endTime,
+                        String typeValue, String typeLabel, String color,
+                        String memo, String dateKey, String repeatMode, boolean locked) {
+        this.title = title;
+        this.day = day;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.typeValue = typeValue;
+        this.typeLabel = typeLabel;
+        this.color = color;
+        this.memo = memo;
+        this.dateKey = dateKey;
+        this.repeatMode = repeatMode != null ? repeatMode : "weekly";
+        this.locked = locked;
+    }
+
+    /**
      * 스케줄 항목 인스턴스를 생성한다.
      *
      * @param planner    소속 플래너

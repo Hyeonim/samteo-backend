@@ -44,6 +44,27 @@ public class PersonalPlanner {
     @OneToMany(mappedBy = "planner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PlannerSchedule> schedules = new ArrayList<>();
 
+    @Column(name = "region_name", length = 200)
+    private String regionName;
+
+    @Column(name = "accommodation_cost")
+    private Long accommodationCost;
+
+    @Column(name = "total_salary")
+    private Long totalSalary;
+
+    @Column(name = "disposable_income")
+    private Long disposableIncome;
+
+    @Column(name = "fixed_expense")
+    private Long fixedExpense;
+
+    @Column(name = "accommodation_json", columnDefinition = "TEXT")
+    private String accommodationJson;
+
+    @Column(name = "jobs_json", columnDefinition = "TEXT")
+    private String jobsJson;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -84,6 +105,21 @@ public class PersonalPlanner {
     public void update(String title, String memo) {
         this.title = title;
         this.memo = memo;
+    }
+
+    /**
+     * 플래너의 재정 메타데이터를 업데이트한다.
+     */
+    public void updateFinancials(String regionName, Long accommodationCost, Long totalSalary,
+                                  Long disposableIncome, Long fixedExpense,
+                                  String accommodationJson, String jobsJson) {
+        this.regionName = regionName;
+        this.accommodationCost = accommodationCost;
+        this.totalSalary = totalSalary;
+        this.disposableIncome = disposableIncome;
+        this.fixedExpense = fixedExpense;
+        this.accommodationJson = accommodationJson;
+        this.jobsJson = jobsJson;
     }
 
     /**
