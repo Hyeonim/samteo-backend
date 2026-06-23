@@ -1,5 +1,7 @@
 package com.samteo.domain.myplanner.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.samteo.domain.myplanner.dto.EventTypeDto;
 import com.samteo.domain.myplanner.dto.PersonalPlannerRequest;
 import com.samteo.domain.myplanner.dto.PersonalPlannerResponse;
@@ -14,7 +16,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -28,6 +34,7 @@ public class PersonalPlannerService {
 
     private final PersonalPlannerRepository personalPlannerRepository;
     private final PlannerDefaultEventTypeRepository plannerDefaultEventTypeRepository;
+    private final ObjectMapper objectMapper;
 
     /**
      * 현재 사용자가 소유한 플래너 목록 전체를 조회한다.
@@ -55,6 +62,15 @@ public class PersonalPlannerService {
         PersonalPlanner planner = PersonalPlanner.create(normalizeId(req.getId()), userId, req.getTitle(), req.getMemo());
         setEventTypes(planner, eventTypesOrDefaults(req.getEventTypes()));
         setSchedules(planner, req.getSchedule());
+        planner.updateFinancials(
+                req.getRegionName(),
+                req.getAccommodationCost(),
+                req.getTotalSalary(),
+                req.getDisposableIncome(),
+                req.getFixedExpense(),
+                toJson(req.getAccommodation()),
+                toJson(req.getJobs())
+        );
         return toResponse(personalPlannerRepository.save(planner));
     }
 
@@ -72,6 +88,15 @@ public class PersonalPlannerService {
         planner.update(req.getTitle(), req.getMemo());
         setEventTypes(planner, req.getEventTypes());
         setSchedules(planner, req.getSchedule());
+        planner.updateFinancials(
+                req.getRegionName(),
+                req.getAccommodationCost(),
+                req.getTotalSalary(),
+                req.getDisposableIncome(),
+                req.getFixedExpense(),
+                toJson(req.getAccommodation()),
+                toJson(req.getJobs())
+        );
         return toResponse(planner);
     }
 
@@ -128,27 +153,34 @@ public class PersonalPlannerService {
 
     private void setSchedules(PersonalPlanner planner, List<ScheduleDto> dtos) {
         if (dtos == null) {
-            planner.replaceSchedules(List.of());
+            planner.getSchedules().clear();
             return;
         }
-        List<PlannerSchedule> entities = dtos.stream()
-                .map(dto -> PlannerSchedule.of(
-                        planner,
-                        normalizeId(dto.getId()),
-                        dto.getTitle(),
-                        dto.getDay(),
-                        dto.getStart(),
-                        dto.getEnd(),
-                        dto.getType(),
-                        dto.getTypeLabel(),
-                        dto.getColor(),
-                        dto.getMemo(),
-                        dto.getDateKey(),
-                        dto.getRepeatMode(),
-                        dto.isLocked()
-                ))
-                .collect(Collectors.toList());
-        planner.replaceSchedules(entities);
+
+        Map<String, PlannerSchedule> existingById = planner.getSchedules().stream()
+                .collect(Collectors.toMap(PlannerSchedule::getId, s -> s));
+
+        Set<String> incomingIds = new HashSet<>();
+        List<PlannerSchedule> toAdd = new ArrayList<>();
+
+        for (ScheduleDto dto : dtos) {
+            String id = normalizeId(dto.getId());
+            incomingIds.add(id);
+            PlannerSchedule existing = existingById.get(id);
+            if (existing != null) {
+                existing.update(dto.getTitle(), dto.getDay(), dto.getStart(), dto.getEnd(),
+                        dto.getType(), dto.getTypeLabel(), dto.getColor(), dto.getMemo(),
+                        dto.getDateKey(), dto.getRepeatMode(), dto.isLocked());
+            } else {
+                toAdd.add(PlannerSchedule.of(planner, id, dto.getTitle(), dto.getDay(),
+                        dto.getStart(), dto.getEnd(), dto.getType(), dto.getTypeLabel(),
+                        dto.getColor(), dto.getMemo(), dto.getDateKey(), dto.getRepeatMode(),
+                        dto.isLocked()));
+            }
+        }
+
+        planner.getSchedules().removeIf(s -> !incomingIds.contains(s.getId()));
+        planner.getSchedules().addAll(toAdd);
     }
 
     private PersonalPlannerResponse toResponse(PersonalPlanner planner) {
@@ -176,14 +208,39 @@ public class PersonalPlannerService {
                 ))
                 .collect(Collectors.toList());
 
-        return new PersonalPlannerResponse(
-                planner.getId(),
-                planner.getTitle(),
-                planner.getMemo(),
-                planner.getUpdatedAt().toString(),
-                eventTypeDtos,
-                scheduleDtos
-        );
+        return PersonalPlannerResponse.builder()
+                .id(planner.getId())
+                .title(planner.getTitle())
+                .memo(planner.getMemo())
+                .updatedAt(planner.getUpdatedAt().toString())
+                .eventTypes(eventTypeDtos)
+                .schedule(scheduleDtos)
+                .regionName(planner.getRegionName())
+                .accommodationCost(planner.getAccommodationCost())
+                .totalSalary(planner.getTotalSalary())
+                .disposableIncome(planner.getDisposableIncome())
+                .fixedExpense(planner.getFixedExpense())
+                .accommodation(fromJson(planner.getAccommodationJson(), new TypeReference<Map<String, Object>>() {}))
+                .jobs(fromJson(planner.getJobsJson(), new TypeReference<List<Map<String, Object>>>() {}))
+                .build();
+    }
+
+    private <T> String toJson(T value) {
+        if (value == null) return null;
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private <T> T fromJson(String json, TypeReference<T> type) {
+        if (json == null || json.isBlank()) return null;
+        try {
+            return objectMapper.readValue(json, type);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private String normalizeId(String id) {
