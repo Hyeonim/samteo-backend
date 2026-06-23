@@ -25,4 +25,5 @@ public class PersonalPlannerRequest {
     private Long fixedExpense;
     private Map<String, Object> accommodation;
     private List<Map<String, Object>> jobs;
+    private String plannerType;
 }

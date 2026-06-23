@@ -14,6 +14,7 @@ services:
       - ./src/main/resources/schema/mariadb/prod/00_prod_baseline_dump.sql:/docker-entrypoint-initdb.d/00-prod-baseline-dump.sql:ro
       - ./src/main/resources/schema/mariadb/local-dev/20_local_dev_seed_delta.sql:/docker-entrypoint-initdb.d/20-local-dev-seed-delta.sql:ro
       - ./src/main/resources/schema/mariadb/local-dev/40_local_dev_planner_default_event_types.sql:/docker-entrypoint-initdb.d/40-local-dev-planner-default-event-types.sql:ro
+      - ./src/main/resources/schema/mariadb/local-dev/50_local_dev_short_term_jobs.sql:/docker-entrypoint-initdb.d/50-local-dev-short-term-jobs.sql:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
