@@ -1,6 +1,8 @@
 package com.samteo.domain.planner.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.samteo.domain.planner.service.PlannerService;
+import com.samteo.domain.planner.service.KakaoMobilityDirectionsService;
 import com.samteo.domain.planner.dto.request.BudgetSimulationRequest;
 import com.samteo.domain.planner.dto.request.CommuteRouteRequest;
 import com.samteo.domain.planner.dto.request.PlannerCreateRequest;
@@ -33,6 +35,7 @@ public class PlannerController {
 
     private final PlannerService plannerService;
     private final OdsayTransitService odsayTransitService;
+    private final KakaoMobilityDirectionsService kakaoMobilityDirectionsService;
 
     @GetMapping("/bootstrap")
     public ResponseEntity<ApiResponse<PlannerBootstrapResponse>> getBootstrapData() {
@@ -81,6 +84,20 @@ public class PlannerController {
             @RequestBody TransitRouteRequest request
     ) {
         return ResponseEntity.ok(ApiResponse.success(odsayTransitService.searchTransitRoutes(request)));
+    }
+
+    @GetMapping("/load-lane")
+    public ResponseEntity<ApiResponse<JsonNode>> loadTransitLane(
+            @RequestParam String mapObject
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(odsayTransitService.loadLane(mapObject)));
+    }
+
+    @PostMapping("/driving-route")
+    public ResponseEntity<ApiResponse<JsonNode>> searchDrivingRoute(
+            @RequestBody TransitRouteRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(kakaoMobilityDirectionsService.searchDrivingRoute(request)));
     }
 
     @PostMapping("/commute-route")

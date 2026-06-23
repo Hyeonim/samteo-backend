@@ -128,10 +128,7 @@ public class JobService {
     }
 
     private int normalizeSize(int size) {
-        if (size <= 10) return 10;
-        if (size <= 20) return 20;
-        if (size <= 50) return 50;
-        return 100;
+        return Math.max(1, Math.min(size, 100));
     }
 
     private String firstText(JsonNode node, String... fields) {
