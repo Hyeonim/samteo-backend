@@ -76,6 +76,8 @@ jobs:
           TOUR_API_KEY=${{ secrets.TOUR_API_KEY }}
           ALIO_API_KEY=${{ secrets.ALIO_API_KEY }}
           DEFAULT_HOURLY_WAGE=${{ vars.DEFAULT_HOURLY_WAGE || '10320' }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL=${{ vars.OPENAI_MODEL || 'gpt-4.1-mini' }}
           KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
           KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
           KAKAO_REDIRECT_URI=${{ vars.KAKAO_REDIRECT_URI || 'https://www.samteo.org/login/oauth2/code/kakao' }}
