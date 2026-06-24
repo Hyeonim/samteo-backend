@@ -14,6 +14,7 @@ import com.samteo.domain.planner.repository.AccommodationRepository;
 import com.samteo.domain.planner.repository.JobRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
@@ -40,13 +41,19 @@ public class OdsayTransitService {
     @Value("${external.odsay.api-key:}")
     private String apiKey;
 
+    @Value("${external.odsay.referer:http://localhost:8080}")
+    private String referer;
+
     public OdsayTransitService(
             RestClient.Builder restClientBuilder,
             ObjectMapper objectMapper,
             JobRepository jobRepository,
             AccommodationRepository accommodationRepository
     ) {
-        this.restClient = restClientBuilder.build();
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5_000);
+        factory.setReadTimeout(10_000);
+        this.restClient = restClientBuilder.requestFactory(factory).build();
         this.objectMapper = objectMapper;
         this.jobRepository = jobRepository;
         this.accommodationRepository = accommodationRepository;
@@ -124,13 +131,16 @@ public class OdsayTransitService {
         try {
             String body = restClient.get()
                     .uri(uri)
+                    .header("Referer", referer)
                     .retrieve()
                     .body(String.class);
 
             JsonNode raw = objectMapper.readTree(body);
-            JsonNode error = raw.path("error");
-            if (!error.isMissingNode()) {
-                String message = error.path("message").asText("ODsay lane search failed.");
+            JsonNode effectiveError = resolveOdsayError(raw.path("error"));
+            if (effectiveError != null) {
+                int code = effectiveError.path("code").asInt(0);
+                String message = effectiveError.path("message").asText(effectiveError.path("msg").asText("ODsay lane search failed."));
+                log.warn("ODsay loadLane error — code={}, message={}", code, message);
                 throw new IllegalArgumentException("ODsay error: " + message);
             }
             return raw;
@@ -172,13 +182,26 @@ public class OdsayTransitService {
         try {
             String body = restClient.get()
                     .uri(uri)
+                    .header("Referer", referer)
                     .retrieve()
                     .body(String.class);
 
             JsonNode raw = objectMapper.readTree(body);
-            JsonNode error = raw.path("error");
-            if (!error.isMissingNode()) {
-                String message = error.path("message").asText("ODsay route search failed.");
+            JsonNode errorNode = raw.path("error");
+            JsonNode effectiveError = resolveOdsayError(errorNode);
+            if (effectiveError != null) {
+                int code = effectiveError.path("code").asInt(0);
+                String message = effectiveError.path("message").asText(effectiveError.path("msg").asText("ODsay route search failed."));
+                log.warn("ODsay transit error — code={}, message={}", code, message);
+                if (code == -98 || code == -99) {
+                    return TransitRouteResponse.builder()
+                            .provider("ODSAY")
+                            .origin(origin)
+                            .destination(destination)
+                            .routes(List.of())
+                            .notices(List.of("해당 구간의 대중교통 경로를 찾을 수 없습니다."))
+                            .build();
+                }
                 throw new IllegalArgumentException("ODsay error: " + message);
             }
 
@@ -253,6 +276,19 @@ public class OdsayTransitService {
                 .latitude(job.getLatitude())
                 .longitude(job.getLongitude())
                 .build();
+    }
+
+    /**
+     * ODsay 에러 노드를 해석한다.
+     * 성공 응답의 "error": false 는 null 반환 (에러 아님).
+     * 에러 응답의 "error": [{...}] (배열) 또는 "error": {...} (객체) 는 첫 번째 에러 객체 반환.
+     */
+    private JsonNode resolveOdsayError(JsonNode errorNode) {
+        if (errorNode == null || errorNode.isMissingNode() || errorNode.isNull()) return null;
+        if (errorNode.isBoolean()) return errorNode.asBoolean() ? errorNode : null;
+        if (errorNode.isArray()) return errorNode.isEmpty() ? null : errorNode.get(0);
+        if (errorNode.isObject()) return errorNode;
+        return null; // number 0 / false-ish primitive → 에러 아님
     }
 
     private void requireOdsayKey() {

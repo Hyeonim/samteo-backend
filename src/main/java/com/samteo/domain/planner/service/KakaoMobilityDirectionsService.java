@@ -20,7 +20,7 @@ public class KakaoMobilityDirectionsService {
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
 
-    @Value("${kakao.client.id:}")
+    @Value("${kakao.rest-api-key:${kakao.client.id:}}")
     private String restApiKey;
 
     public KakaoMobilityDirectionsService(RestClient.Builder restClientBuilder, ObjectMapper objectMapper) {
