@@ -99,6 +99,7 @@ public class PersonalPlannerService {
                 toJson(req.getJobs())
         );
         if (req.getPlannerType() != null) planner.updatePlannerType(req.getPlannerType());
+        personalPlannerRepository.save(planner);
         return toResponse(planner);
     }
 
