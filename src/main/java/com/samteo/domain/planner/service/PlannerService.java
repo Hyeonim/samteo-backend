@@ -249,8 +249,14 @@ public class PlannerService {
                     .orElse(List.of());
 
         Map<Long, TourContentResponse> uniqueStays = new LinkedHashMap<>();
-        regionCodes.forEach(code -> tourApiService.getStays(code, 100, 1)
-                .forEach(stay -> uniqueStays.putIfAbsent(stay.getContentId(), stay)));
+        regionCodes.forEach(code -> {
+            try {
+                tourApiService.getStays(code, 100, 1)
+                        .forEach(stay -> uniqueStays.putIfAbsent(stay.getContentId(), stay));
+            } catch (Exception e) {
+                // Tour API 실패 시 해당 지역만 건너뜀 (500 방지)
+            }
+        });
 
         return uniqueStays.values().stream()
                 .map(stay -> toApiAccommodation(stay, metaRegions))

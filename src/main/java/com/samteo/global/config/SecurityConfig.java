@@ -35,6 +35,7 @@ public class SecurityConfig {
                                 "/api/planner/jobs/page",
                                 "/api/planner/accommodations",
                                 "/api/planner/map-provider",
+                                "/api/planner/load-lane",
                                 "/api/regions",
                                 "/api/festivals",
                                 "/api/attractions",
@@ -43,6 +44,10 @@ public class SecurityConfig {
                                 "/api/tour/festivals",
                                 "/api/tour/detail/common",
                                 "/api/tour/detail/intro"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/planner/transit-routes",
+                                "/api/planner/budget"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
