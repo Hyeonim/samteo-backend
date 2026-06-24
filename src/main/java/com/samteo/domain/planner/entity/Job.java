@@ -75,4 +75,12 @@ public class Job {
     @Column(name = "tag", nullable = false)
     @Fetch(FetchMode.SUBSELECT)
     private List<String> tags;
+
+    @Column(nullable = false, columnDefinition = "INT DEFAULT 0")
+    @Builder.Default
+    private int bookmarkCount = 0;
+
+    @Column(nullable = false, columnDefinition = "INT DEFAULT 0")
+    @Builder.Default
+    private int reviewCount = 0;
 }

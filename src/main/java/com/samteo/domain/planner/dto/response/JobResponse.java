@@ -45,6 +45,8 @@ public class JobResponse {
     private List<String> tags;
     private String source;
     private String sourceUrl;
+    private int bookmarkCount;
+    private int reviewCount;
     private String startDate;
     private String endDate;
 
@@ -84,6 +86,8 @@ public class JobResponse {
                 .lng(job.getLongitude())
                 .tags(tags.stream().map(JobResponse::toKoreanTag).toList())
                 .source("SHORT_TERM")
+                .bookmarkCount(job.getBookmarkCount())
+                .reviewCount(job.getReviewCount())
                 .build();
     }
 

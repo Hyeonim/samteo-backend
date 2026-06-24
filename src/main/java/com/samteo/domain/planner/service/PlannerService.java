@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.math.BigDecimal;
@@ -86,6 +87,14 @@ public class PlannerService {
     }
 
     @Transactional(readOnly = true)
+    public JobPageResponse getJobsPage(String regionId, String cityId, int page, int size, String type, String sort) {
+        if ("short".equalsIgnoreCase(type)) {
+            return getShortTermJobsPage(cityId != null ? cityId : regionId, page, size, sort);
+        }
+        return getJobsPage(regionId, cityId, page, size, type);
+    }
+
+    @Transactional(readOnly = true)
     public JobPageResponse getJobsPage(String regionId, String cityId, int page, int size, String type) {
         if ("short".equals(type)) {
             return getShortTermJobsPage(cityId != null ? cityId : regionId, page, size);
@@ -118,23 +127,44 @@ public class PlannerService {
     }
 
     private JobPageResponse getShortTermJobsPage(String cityId, int page, int size) {
-        PageRequest pageable = PageRequest.of(page - 1, size);
+        return getShortTermJobsPage(cityId, page, size, "default");
+    }
+
+    private JobPageResponse getShortTermJobsPage(String cityId, int page, int size, String sort) {
+        Pageable pageable = PageRequest.of(page - 1, size);
         Page<Job> dbPage;
-        if (cityId == null || cityId.isBlank()) {
-            dbPage = jobRepository.findAll(pageable);
-        } else if (isNumericId(cityId)) {
-            // Step1Region이 meta_region의 숫자 ID를 전달 → region_id 기준으로 조회
-            dbPage = jobRepository.findByRegionId(cityId, pageable);
+        if ("bookmark".equalsIgnoreCase(sort)) {
+            if (cityId == null) {
+                dbPage = jobRepository.findAllByOrderByBookmarkCountDesc(pageable);
+            } else if (jobRepository.findByCityId(cityId, pageable).hasContent()) {
+                dbPage = jobRepository.findByCityIdOrderByBookmarkCountDesc(cityId, pageable);
+            } else {
+                dbPage = jobRepository.findByRegionIdOrderByBookmarkCountDesc(cityId, pageable);
+            }
+        } else if ("review".equalsIgnoreCase(sort)) {
+            if (cityId == null) {
+                dbPage = jobRepository.findAllByReviewCountGreaterThanOrderByReviewCountDesc(0, pageable);
+            } else if (jobRepository.findByCityId(cityId, pageable).hasContent()) {
+                dbPage = jobRepository.findByCityIdAndReviewCountGreaterThanOrderByReviewCountDesc(cityId, 0, pageable);
+            } else {
+                dbPage = jobRepository.findByRegionIdAndReviewCountGreaterThanOrderByReviewCountDesc(cityId, 0, pageable);
+            }
         } else {
-            // 영문 city_id 직접 조회 (e.g. 'seoul')
-            dbPage = jobRepository.findByCityId(cityId, pageable);
+            if (cityId == null) {
+                dbPage = jobRepository.findAll(pageable);
+            } else if (jobRepository.findByCityId(cityId, pageable).hasContent()) {
+                dbPage = jobRepository.findByCityId(cityId, pageable);
+            } else {
+                dbPage = jobRepository.findByRegionId(cityId, pageable);
+            }
         }
-        long total = dbPage.getTotalElements();
-        int totalPages = (int) Math.ceil((double) total / size);
         return JobPageResponse.builder()
                 .items(dbPage.getContent().stream().map(JobResponse::from).toList())
-                .page(page).size(size).totalCount(total)
-                .totalPages(totalPages).hasNext(page < totalPages)
+                .page(page)
+                .size(size)
+                .totalCount((int) dbPage.getTotalElements())
+                .totalPages(dbPage.getTotalPages())
+                .hasNext(dbPage.hasNext())
                 .build();
     }
 
@@ -380,6 +410,7 @@ public class PlannerService {
                 .flatMap(metaRegionRepository::findById)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown regionId: " + request.getRegionId()));
         List<Job> jobs = request.getJobIds().stream().map(this::findJob).toList();
+        jobs.forEach(job -> jobRepository.incrementBookmarkCount(job.getId()));
         if (jobs.isEmpty()) {
             throw new IllegalArgumentException("At least one jobId is required.");
         }
