@@ -13,24 +13,26 @@ import com.samteo.domain.planner.entity.Job;
 import com.samteo.domain.planner.repository.AccommodationRepository;
 import com.samteo.domain.planner.repository.JobRepository;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
+
 
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
 public class OdsayTransitService {
 
-    private final RestClient restClient;
+    private final OkHttpClient httpClient;
     private final ObjectMapper objectMapper;
     private final JobRepository jobRepository;
     private final AccommodationRepository accommodationRepository;
@@ -41,19 +43,18 @@ public class OdsayTransitService {
     @Value("${external.odsay.api-key:}")
     private String apiKey;
 
-    @Value("${external.odsay.referer:http://localhost:8080}")
-    private String referer;
+    @Value("${external.odsay.origin:https://samteo.org}")
+    private String odsayOrigin;
 
     public OdsayTransitService(
-            RestClient.Builder restClientBuilder,
             ObjectMapper objectMapper,
             JobRepository jobRepository,
             AccommodationRepository accommodationRepository
     ) {
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(5_000);
-        factory.setReadTimeout(10_000);
-        this.restClient = restClientBuilder.requestFactory(factory).build();
+        this.httpClient = new OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .build();
         this.objectMapper = objectMapper;
         this.jobRepository = jobRepository;
         this.accommodationRepository = accommodationRepository;
@@ -129,12 +130,7 @@ public class OdsayTransitService {
                 .toUri();
 
         try {
-            String body = restClient.get()
-                    .uri(uri)
-                    .header("Referer", referer)
-                    .retrieve()
-                    .body(String.class);
-
+            String body = odsayGet(uri);
             JsonNode raw = objectMapper.readTree(body);
             JsonNode effectiveError = resolveOdsayError(raw.path("error"));
             if (effectiveError != null) {
@@ -144,14 +140,11 @@ public class OdsayTransitService {
                 throw new IllegalArgumentException("ODsay error: " + message);
             }
             return raw;
-        } catch (RestClientException e) {
-            log.error("ODsay lane API call failed: {}", e.getMessage());
-            throw new RuntimeException("ODsay lane API call failed.");
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
-            log.error("ODsay lane response parsing failed: {}", e.getMessage());
-            throw new RuntimeException("ODsay lane response parsing failed.");
+            log.error("ODsay lane API call failed: {}", e.getMessage());
+            throw new RuntimeException("ODsay lane API call failed.");
         }
     }
 
@@ -180,12 +173,7 @@ public class OdsayTransitService {
                 .toUri();
 
         try {
-            String body = restClient.get()
-                    .uri(uri)
-                    .header("Referer", referer)
-                    .retrieve()
-                    .body(String.class);
-
+            String body = odsayGet(uri);
             JsonNode raw = objectMapper.readTree(body);
             JsonNode errorNode = raw.path("error");
             JsonNode effectiveError = resolveOdsayError(errorNode);
@@ -217,9 +205,6 @@ public class OdsayTransitService {
                     ))
                     .raw(raw)
                     .build();
-        } catch (RestClientException e) {
-            log.error("ODsay route API call failed: {}", e.getMessage());
-            throw new RuntimeException("ODsay route API call failed.");
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
@@ -289,6 +274,18 @@ public class OdsayTransitService {
         if (errorNode.isArray()) return errorNode.isEmpty() ? null : errorNode.get(0);
         if (errorNode.isObject()) return errorNode;
         return null; // number 0 / false-ish primitive → 에러 아님
+    }
+
+    private String odsayGet(URI uri) throws Exception {
+        Request request = new Request.Builder()
+                .url(uri.toString())
+                .header("Origin", odsayOrigin)
+                .header("Referer", odsayOrigin + "/")
+                .build();
+        try (Response response = httpClient.newCall(request).execute()) {
+            if (!response.isSuccessful()) throw new RuntimeException("ODsay HTTP " + response.code());
+            return response.body().string();
+        }
     }
 
     private void requireOdsayKey() {
