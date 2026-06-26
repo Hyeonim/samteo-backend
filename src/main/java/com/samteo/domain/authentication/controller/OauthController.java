@@ -1,9 +1,13 @@
 package com.samteo.domain.authentication.controller;
 
 import com.samteo.domain.authentication.dto.response.AuthResponse;
+import com.samteo.domain.authentication.dto.response.GoogleUserInfo;
 import com.samteo.domain.authentication.dto.response.KakaoUserInfo;
+import com.samteo.domain.authentication.dto.response.NaverUserInfo;
 import com.samteo.domain.authentication.service.AuthService;
+import com.samteo.domain.authentication.service.GoogleOAuthService;
 import com.samteo.domain.authentication.service.KakaoOAuthService;
+import com.samteo.domain.authentication.service.NaverOAuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +25,8 @@ import java.io.IOException;
 public class OauthController {
 
     private final KakaoOAuthService kakaoOAuthService;
+    private final GoogleOAuthService googleOAuthService;
+    private final NaverOAuthService naverOAuthService;
     private final AuthService authService;
 
     @Value("${app.frontend-url}")
@@ -43,6 +49,36 @@ public class OauthController {
                 String.valueOf(userInfo.getId()),
                 userInfo.getEmail(),
                 userInfo.getNickname()
+        );
+        response.sendRedirect(frontendUrl + "/oauth/callback?token=" + auth.getToken());
+    }
+
+    @GetMapping("/login/oauth2/code/google")
+    public void googleCallback(@RequestParam("code") String code, HttpServletResponse response) throws IOException {
+        String accessToken = googleOAuthService.getAccessToken(code);
+        GoogleUserInfo userInfo = googleOAuthService.getUserInfo(accessToken);
+        AuthResponse auth = authService.loginOrRegisterOAuth(
+                "google",
+                userInfo.getId(),
+                userInfo.getEmail(),
+                userInfo.getName()
+        );
+        response.sendRedirect(frontendUrl + "/oauth/callback?token=" + auth.getToken());
+    }
+
+    @GetMapping("/login/oauth2/code/naver")
+    public void naverCallback(
+            @RequestParam("code") String code,
+            @RequestParam(value = "state", required = false) String state,
+            HttpServletResponse response
+    ) throws IOException {
+        String accessToken = naverOAuthService.getAccessToken(code, state);
+        NaverUserInfo userInfo = naverOAuthService.getUserInfo(accessToken);
+        AuthResponse auth = authService.loginOrRegisterOAuth(
+                "naver",
+                userInfo.getId(),
+                userInfo.getEmail(),
+                userInfo.getName()
         );
         response.sendRedirect(frontendUrl + "/oauth/callback?token=" + auth.getToken());
     }

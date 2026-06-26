@@ -81,6 +81,12 @@ jobs:
           KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
           KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
           KAKAO_REDIRECT_URI=${{ vars.KAKAO_REDIRECT_URI || 'https://www.samteo.org/login/oauth2/code/kakao' }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT_URI=${{ vars.GOOGLE_REDIRECT_URI || 'https://www.samteo.org/login/oauth2/code/google' }}
+          NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET=${{ secrets.NAVER_CLIENT_SECRET }}
+          NAVER_REDIRECT_URI=${{ vars.NAVER_REDIRECT_URI || 'https://www.samteo.org/login/oauth2/code/naver' }}
           APP_FRONTEND_URL=${{ vars.APP_FRONTEND_URL || 'https://www.samteo.org' }}
           APP_STORAGE_TYPE=${{ vars.APP_STORAGE_TYPE || 's3' }}
           AWS_REGION=${{ vars.AWS_REGION || 'ap-northeast-2' }}
