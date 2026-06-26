@@ -54,6 +54,9 @@ ODSAY_API_KEY=<ODsay API key>
 TOUR_API_KEY=<Korea Tourism Organization TourAPI key>
 KAKAO_CLIENT_ID=<Kakao REST API key>
 KAKAO_CLIENT_SECRET=<Kakao client secret>
+
+AWS_ACCESS_KEY_ID=<IAM access key for S3 upload>
+AWS_SECRET_ACCESS_KEY=<IAM secret access key for S3 upload>
 ```
 
 Add these values under **Variables**:
@@ -66,11 +69,32 @@ KAKAO_REDIRECT_URI=https://www.samteo.org/login/oauth2/code/kakao
 APP_FRONTEND_URL=https://www.samteo.org
 APP_IMAGE=ghcr.io/hyeonim/samteo-backend:latest
 SITE_DOMAIN=www.samteo.org
+APP_STORAGE_TYPE=s3
+AWS_REGION=ap-northeast-2
+AWS_S3_BUCKET=samteo-img
+AWS_S3_PUBLIC_BASE_URL=
 ```
 
 Values such as `APP_IMAGE`, `SITE_DOMAIN`, and redirect URLs are not secret,
 so repository variables are enough. Database credentials, API keys, OAuth
 client secrets, JWT secrets, and SSH keys must stay in repository secrets.
+
+Community post images are uploaded to S3 when `APP_STORAGE_TYPE=s3`.
+The object key format is:
+
+```text
+community/{postId}/{uuid}.{ext}
+```
+
+For example, with bucket `samteo-img`:
+
+```text
+s3://samteo-img/community/123/2f6d...b91.png
+```
+
+If a CloudFront or custom CDN domain is added later, set
+`AWS_S3_PUBLIC_BASE_URL` to that base URL. If it is empty, the backend returns
+the standard S3 object URL for the bucket and region.
 
 If any real secret has been posted in chat, committed, or shared in a screenshot,
 rotate it before using it in production.

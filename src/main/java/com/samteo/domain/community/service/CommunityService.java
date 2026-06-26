@@ -66,11 +66,11 @@ public class CommunityService {
         }
 
         User user = findUser(userId);
-        CommunityPost post = CommunityPost.create(user, normalizedContent);
+        CommunityPost post = postRepository.saveAndFlush(CommunityPost.create(user, normalizedContent));
         for (int i = 0; i < validImages.size(); i++) {
-            post.addImage(imageStorageService.storeCommunityImage(validImages.get(i)), i);
+            post.addImage(imageStorageService.storeCommunityImage(validImages.get(i), post.getPostId()), i);
         }
-        return toPostResponse(postRepository.save(post), userId);
+        return toPostResponse(post, userId);
     }
 
     @Transactional
