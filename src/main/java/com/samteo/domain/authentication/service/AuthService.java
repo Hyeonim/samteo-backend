@@ -66,6 +66,7 @@ public class AuthService {
     @Transactional
     public AuthResponse loginOrRegisterOAuth(String provider, String providerId, String email, String name) {
         User user = userRepository.findByProviderAndProviderId(provider, providerId)
+                .or(() -> userRepository.findByEmailIgnoreCase(email))
                 .orElseGet(() -> userRepository.save(User.createOAuth(email, name, provider, providerId)));
         return toAuthResponse(user);
     }
