@@ -43,7 +43,11 @@ public class SecurityConfig {
                                 "/api/tour/spots",
                                 "/api/tour/festivals",
                                 "/api/tour/detail/common",
-                                "/api/tour/detail/intro"
+                                "/api/tour/detail/intro",
+                                "/api/community/posts",
+                                "/api/community/posts/*",
+                                "/api/community/posts/*/comments",
+                                "/uploads/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/planner/transit-routes",

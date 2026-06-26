@@ -61,6 +61,7 @@ out/
 ### Runtime / temp ###
 tmp/
 temp/
+uploads/
 *.pid
 *.seed
 *.stackdump
