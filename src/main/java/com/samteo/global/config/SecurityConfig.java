@@ -33,6 +33,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/login/oauth2/**", "/api/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/community/posts/me").authenticated()
                         .requestMatchers(HttpMethod.GET,
+                                "/api/users/*/profile",
                                 "/api/planner/bootstrap",
                                 "/api/planner/jobs",
                                 "/api/planner/jobs/page",
@@ -48,6 +49,7 @@ public class SecurityConfig {
                                 "/api/tour/detail/common",
                                 "/api/tour/detail/intro",
                                 "/api/community/posts",
+                                "/api/community/posts/users/*",
                                 "/api/community/posts/*",
                                 "/api/community/posts/*/comments",
                                 "/uploads/**"

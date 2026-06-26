@@ -56,11 +56,16 @@ public class CommunityService {
 
     @Transactional(readOnly = true)
     public CommunityPostPageResponse getMyPosts(Long userId, int page, int size) {
+        return getPostsByUser(userId, userId, page, size);
+    }
+
+    @Transactional(readOnly = true)
+    public CommunityPostPageResponse getPostsByUser(Long profileUserId, Long viewerId, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(page, 0), normalizeSize(size));
         Page<CommunityPost> posts =
-                postRepository.findByUserUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(userId, pageable);
+                postRepository.findByUserUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(profileUserId, pageable);
         return new CommunityPostPageResponse(
-                posts.getContent().stream().map(post -> toPostResponse(post, userId)).toList(),
+                posts.getContent().stream().map(post -> toPostResponse(post, viewerId)).toList(),
                 posts.getNumber(),
                 posts.getSize(),
                 posts.getTotalElements(),

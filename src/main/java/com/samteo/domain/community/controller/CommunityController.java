@@ -43,12 +43,14 @@ public class CommunityController {
         return ResponseEntity.ok(ApiResponse.success(communityService.getPosts(userId, page, size)));
     }
 
-    @GetMapping("/{postId}")
-    public ResponseEntity<ApiResponse<CommunityPostResponse>> getPost(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable Long postId
+    @GetMapping("/users/{profileUserId}")
+    public ResponseEntity<ApiResponse<CommunityPostPageResponse>> getPostsByUser(
+            @AuthenticationPrincipal Long viewerId,
+            @PathVariable Long profileUserId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
     ) {
-        return ResponseEntity.ok(ApiResponse.success(communityService.getPost(postId, userId)));
+        return ResponseEntity.ok(ApiResponse.success(communityService.getPostsByUser(profileUserId, viewerId, page, size)));
     }
 
     @GetMapping("/me")
@@ -58,6 +60,14 @@ public class CommunityController {
             @RequestParam(defaultValue = "12") int size
     ) {
         return ResponseEntity.ok(ApiResponse.success(communityService.getMyPosts(userId, page, size)));
+    }
+
+    @GetMapping("/{postId}")
+    public ResponseEntity<ApiResponse<CommunityPostResponse>> getPost(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long postId
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(communityService.getPost(postId, userId)));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
