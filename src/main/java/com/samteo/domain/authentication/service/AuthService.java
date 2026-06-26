@@ -6,7 +6,7 @@ import com.samteo.domain.authentication.dto.response.AuthResponse;
 import com.samteo.domain.user.entity.User;
 import com.samteo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +19,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final JwtService jwtService;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * 이메일 중복 여부를 확인하고 비밀번호를 해시한 뒤 로컬 계정을 생성한다.
@@ -72,6 +72,6 @@ public class AuthService {
 
     private AuthResponse toAuthResponse(User user) {
         String token = jwtService.generateToken(user);
-        return new AuthResponse(token, user.getUserId(), user.getEmail(), user.getName());
+        return new AuthResponse(token, user.getUserId(), user.getEmail(), user.getName(), user.getRole());
     }
 }
