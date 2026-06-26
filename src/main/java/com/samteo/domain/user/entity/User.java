@@ -43,6 +43,9 @@ public class User {
     @Column(name = "password_hash")
     private String passwordHash;
 
+    @Column(name = "role", nullable = false)
+    private String role = "USER";
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -70,6 +73,21 @@ public class User {
         user.name = name;
         user.provider = "local";
         user.passwordHash = passwordHash;
+        user.role = "USER";
+        return user;
+    }
+
+    public void updateRole(String role) {
+        this.role = role;
+    }
+
+    public static User createAdmin(String email, String name, String passwordHash) {
+        User user = new User();
+        user.email = email;
+        user.name = name;
+        user.provider = "local";
+        user.passwordHash = passwordHash;
+        user.role = "ADMIN";
         return user;
     }
 

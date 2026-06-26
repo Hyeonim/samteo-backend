@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface JobRepository extends JpaRepository<Job, String> {
 
@@ -33,4 +34,7 @@ public interface JobRepository extends JpaRepository<Job, String> {
     Page<Job> findAllByReviewCountGreaterThanOrderByReviewCountDesc(int reviewCount, Pageable pageable);
     Page<Job> findByCityIdAndReviewCountGreaterThanOrderByReviewCountDesc(String cityId, int reviewCount, Pageable pageable);
     Page<Job> findByRegionIdAndReviewCountGreaterThanOrderByReviewCountDesc(String regionId, int reviewCount, Pageable pageable);
+
+    @Query("SELECT j FROM Job j WHERE LOWER(j.title) LIKE LOWER(CONCAT('%', :kw, '%')) OR LOWER(j.company) LIKE LOWER(CONCAT('%', :kw, '%')) OR LOWER(j.district) LIKE LOWER(CONCAT('%', :kw, '%'))")
+    Page<Job> searchByKeyword(@Param("kw") String keyword, Pageable pageable);
 }
