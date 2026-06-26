@@ -14,5 +14,8 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
     Page<CommunityPost> findByDeletedAtIsNullOrderByCreatedAtDesc(Pageable pageable);
 
     @EntityGraph(attributePaths = {"user", "images"})
+    Page<CommunityPost> findByUserUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(Long userId, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"user", "images"})
     Optional<CommunityPost> findByPostIdAndDeletedAtIsNull(Long postId);
 }

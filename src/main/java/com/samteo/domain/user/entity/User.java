@@ -90,4 +90,9 @@ public class User {
         user.providerId = providerId;
         return user;
     }
+
+    public void updateProfile(String email, String name) {
+        this.email = email;
+        this.name = name;
+    }
 }

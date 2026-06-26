@@ -78,6 +78,14 @@ public class CommunityPost {
         images.add(CommunityPostImage.create(this, imageUrl, sortOrder));
     }
 
+    public void updateContent(String content) {
+        this.content = content;
+    }
+
+    public boolean hasImages() {
+        return !images.isEmpty();
+    }
+
     public void increaseLikeCount() {
         likeCount++;
     }

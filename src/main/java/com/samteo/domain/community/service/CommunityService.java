@@ -54,6 +54,21 @@ public class CommunityService {
         return toPostResponse(findPost(postId), viewerId);
     }
 
+    @Transactional(readOnly = true)
+    public CommunityPostPageResponse getMyPosts(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), normalizeSize(size));
+        Page<CommunityPost> posts =
+                postRepository.findByUserUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(userId, pageable);
+        return new CommunityPostPageResponse(
+                posts.getContent().stream().map(post -> toPostResponse(post, userId)).toList(),
+                posts.getNumber(),
+                posts.getSize(),
+                posts.getTotalElements(),
+                posts.getTotalPages(),
+                posts.hasNext()
+        );
+    }
+
     @Transactional
     public CommunityPostResponse createPost(Long userId, String content, List<MultipartFile> images) {
         String normalizedContent = content == null ? "" : content.trim();
@@ -80,6 +95,22 @@ public class CommunityService {
             throw new IllegalArgumentException("본인이 작성한 게시글만 삭제할 수 있습니다.");
         }
         post.softDelete();
+    }
+
+    @Transactional
+    public CommunityPostResponse updatePost(Long userId, Long postId, String content) {
+        CommunityPost post = findPost(postId);
+        if (!post.isOwnedBy(userId)) {
+            throw new IllegalArgumentException("본인이 작성한 게시글만 수정할 수 있습니다.");
+        }
+
+        String normalizedContent = content == null ? "" : content.trim();
+        if (normalizedContent.isBlank() && !post.hasImages()) {
+            throw new IllegalArgumentException("내용 또는 이미지가 필요합니다.");
+        }
+
+        post.updateContent(normalizedContent);
+        return toPostResponse(post, userId);
     }
 
     @Transactional

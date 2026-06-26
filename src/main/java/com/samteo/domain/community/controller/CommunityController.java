@@ -5,6 +5,7 @@ import com.samteo.domain.community.dto.CommunityCommentRequest;
 import com.samteo.domain.community.dto.CommunityCommentResponse;
 import com.samteo.domain.community.dto.CommunityPostPageResponse;
 import com.samteo.domain.community.dto.CommunityPostResponse;
+import com.samteo.domain.community.dto.CommunityPostUpdateRequest;
 import com.samteo.domain.community.service.CommunityService;
 import com.samteo.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -49,6 +51,15 @@ public class CommunityController {
         return ResponseEntity.ok(ApiResponse.success(communityService.getPost(postId, userId)));
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<CommunityPostPageResponse>> getMyPosts(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(communityService.getMyPosts(userId, page, size)));
+    }
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<CommunityPostResponse>> createPost(
             @AuthenticationPrincipal Long userId,
@@ -66,6 +77,15 @@ public class CommunityController {
     ) {
         communityService.deletePost(userId, postId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{postId}")
+    public ResponseEntity<ApiResponse<CommunityPostResponse>> updatePost(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long postId,
+            @RequestBody CommunityPostUpdateRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(communityService.updatePost(userId, postId, request.getContent())));
     }
 
     @PostMapping("/{postId}/likes")

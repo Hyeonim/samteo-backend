@@ -1,5 +1,6 @@
 package com.samteo.domain.user.controller;
 
+import com.samteo.domain.user.dto.request.UserProfileUpdateRequest;
 import com.samteo.domain.user.dto.response.UserResponse;
 import com.samteo.domain.user.service.UserService;
 import com.samteo.global.response.ApiResponse;
@@ -7,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,5 +32,13 @@ public class UserController {
     @GetMapping("/users/me")
     public ResponseEntity<ApiResponse<UserResponse>> getMe(@AuthenticationPrincipal Long userId) {
         return ResponseEntity.ok(ApiResponse.success(userService.getMe(userId)));
+    }
+
+    @PutMapping("/users/me")
+    public ResponseEntity<ApiResponse<UserResponse>> updateMe(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody UserProfileUpdateRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(userService.updateMe(userId, request)));
     }
 }

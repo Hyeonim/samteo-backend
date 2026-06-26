@@ -29,6 +29,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/login/oauth2/**", "/api/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/community/posts/me").authenticated()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/planner/bootstrap",
                                 "/api/planner/jobs",
