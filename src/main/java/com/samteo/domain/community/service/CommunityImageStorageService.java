@@ -9,6 +9,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -95,6 +96,15 @@ public class CommunityImageStorageService {
         try (InputStream inputStream = file.getInputStream()) {
             s3Client.putObject(request, RequestBody.fromInputStream(inputStream, file.getSize()));
             return publicUrl(key);
+        } catch (S3Exception e) {
+            throw new IllegalStateException(
+                    "S3 image upload failed. bucket=" + bucket
+                            + ", key=" + key
+                            + ", awsStatus=" + e.statusCode()
+                            + ", awsCode=" + e.awsErrorDetails().errorCode()
+                            + ", awsMessage=" + e.awsErrorDetails().errorMessage(),
+                    e
+            );
         } catch (IOException e) {
             throw new IllegalStateException("이미지 파일 업로드에 실패했습니다.", e);
         }
