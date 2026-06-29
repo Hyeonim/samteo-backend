@@ -113,4 +113,16 @@ public class User {
         this.email = email;
         this.name = name;
     }
+
+    /**
+     * 동일 이메일로 연결된 사용자가 다른 OAuth 제공자로 로그인한 경우
+     * 가장 최근에 인증한 제공자 정보를 기록한다.
+     *
+     * @param provider 현재 로그인에 사용한 OAuth 제공자
+     * @param providerId 제공자가 발급한 사용자 고유 식별자
+     */
+    public void updateOAuthProvider(String provider, String providerId) {
+        this.provider = provider;
+        this.providerId = providerId;
+    }
 }
