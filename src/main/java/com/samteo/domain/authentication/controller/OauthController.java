@@ -1,9 +1,9 @@
 package com.samteo.domain.authentication.controller;
 
-import com.samteo.domain.authentication.dto.response.AuthResponse;
 import com.samteo.domain.authentication.dto.response.GoogleUserInfo;
 import com.samteo.domain.authentication.dto.response.KakaoUserInfo;
 import com.samteo.domain.authentication.dto.response.NaverUserInfo;
+import com.samteo.domain.authentication.dto.response.OAuthLoginResult;
 import com.samteo.domain.authentication.service.AuthService;
 import com.samteo.domain.authentication.service.GoogleOAuthService;
 import com.samteo.domain.authentication.service.KakaoOAuthService;
@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 
@@ -44,26 +45,26 @@ public class OauthController {
     public void kakaoCallback(@RequestParam("code") String code, HttpServletResponse response) throws IOException {
         String accessToken = kakaoOAuthService.getAccessToken(code);
         KakaoUserInfo userInfo = kakaoOAuthService.getUserInfo(accessToken);
-        AuthResponse auth = authService.loginOrRegisterOAuth(
+        OAuthLoginResult result = authService.loginOrRegisterOAuth(
                 "kakao",
                 String.valueOf(userInfo.getId()),
                 userInfo.getEmail(),
                 userInfo.getNickname()
         );
-        response.sendRedirect(frontendUrl + "/oauth/callback?token=" + auth.getToken());
+        sendOAuthResult(response, result);
     }
 
     @GetMapping("/login/oauth2/code/google")
     public void googleCallback(@RequestParam("code") String code, HttpServletResponse response) throws IOException {
         String accessToken = googleOAuthService.getAccessToken(code);
         GoogleUserInfo userInfo = googleOAuthService.getUserInfo(accessToken);
-        AuthResponse auth = authService.loginOrRegisterOAuth(
+        OAuthLoginResult result = authService.loginOrRegisterOAuth(
                 "google",
                 userInfo.getId(),
                 userInfo.getEmail(),
                 userInfo.getName()
         );
-        response.sendRedirect(frontendUrl + "/oauth/callback?token=" + auth.getToken());
+        sendOAuthResult(response, result);
     }
 
     @GetMapping("/login/oauth2/code/naver")
@@ -74,12 +75,26 @@ public class OauthController {
     ) throws IOException {
         String accessToken = naverOAuthService.getAccessToken(code, state);
         NaverUserInfo userInfo = naverOAuthService.getUserInfo(accessToken);
-        AuthResponse auth = authService.loginOrRegisterOAuth(
+        OAuthLoginResult result = authService.loginOrRegisterOAuth(
                 "naver",
                 userInfo.getId(),
                 userInfo.getEmail(),
                 userInfo.getName()
         );
-        response.sendRedirect(frontendUrl + "/oauth/callback?token=" + auth.getToken());
+        sendOAuthResult(response, result);
+    }
+
+    private void sendOAuthResult(HttpServletResponse response, OAuthLoginResult result) throws IOException {
+        UriComponentsBuilder redirect = UriComponentsBuilder
+                .fromUriString(frontendUrl)
+                .path("/oauth/callback");
+        if (result.isLinkRequired()) {
+            redirect.queryParam("linkToken", result.getLinkToken())
+                    .queryParam("provider", result.getProvider())
+                    .queryParam("email", result.getEmail());
+        } else {
+            redirect.queryParam("token", result.getAuth().getToken());
+        }
+        response.sendRedirect(redirect.build().encode().toUriString());
     }
 }

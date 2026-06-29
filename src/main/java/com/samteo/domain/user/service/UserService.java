@@ -4,6 +4,7 @@ import com.samteo.domain.user.dto.request.UserProfileUpdateRequest;
 import com.samteo.domain.user.dto.response.UserProfileResponse;
 import com.samteo.domain.user.dto.response.UserResponse;
 import com.samteo.domain.community.repository.CommunityPostRepository;
+import com.samteo.domain.authentication.repository.UserAuthIdentityRepository;
 import com.samteo.domain.user.entity.User;
 import com.samteo.domain.user.entity.UserFollow;
 import com.samteo.domain.user.repository.UserFollowRepository;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserAuthIdentityRepository userAuthIdentityRepository;
     private final UserFollowRepository userFollowRepository;
     private final CommunityPostRepository communityPostRepository;
 
@@ -33,7 +35,7 @@ public class UserService {
     public UserResponse getMe(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
-        return UserResponse.from(user);
+        return toUserResponse(user);
     }
 
     @Transactional
@@ -58,7 +60,7 @@ public class UserService {
                 });
 
         user.updateProfile(email, name);
-        return UserResponse.from(user);
+        return toUserResponse(user);
     }
 
     @Transactional(readOnly = true)
@@ -96,6 +98,15 @@ public class UserService {
     private User findUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
+    }
+
+    private UserResponse toUserResponse(User user) {
+        java.util.List<String> providers = userAuthIdentityRepository
+                .findAllByUserIdOrderByLinkedAtAsc(user.getUserId())
+                        .stream()
+                        .map(identity -> identity.getProvider())
+                        .toList();
+        return UserResponse.from(user, providers.isEmpty() ? java.util.List.of(user.getProvider()) : providers);
     }
 
     private UserProfileResponse toProfileResponse(User user, Long viewerId) {
