@@ -5,6 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -15,6 +17,24 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
 
     @EntityGraph(attributePaths = {"user", "images"})
     Page<CommunityPost> findByUserUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(Long userId, Pageable pageable);
+
+    @Query(
+            value = """
+                    SELECT post.*
+                    FROM community_posts post
+                    WHERE post.deleted_at IS NULL
+                      AND post.content REGEXP CONCAT('(^|[[:space:]])#', :tag, '([[:space:]]|$)')
+                    ORDER BY post.created_at DESC
+                    """,
+            countQuery = """
+                    SELECT COUNT(*)
+                    FROM community_posts post
+                    WHERE post.deleted_at IS NULL
+                      AND post.content REGEXP CONCAT('(^|[[:space:]])#', :tag, '([[:space:]]|$)')
+                    """,
+            nativeQuery = true
+    )
+    Page<CommunityPost> findByHashtag(@Param("tag") String tag, Pageable pageable);
 
     long countByUserUserIdAndDeletedAtIsNull(Long userId);
 

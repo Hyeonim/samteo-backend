@@ -50,6 +50,7 @@ public class SecurityConfig {
                                 "/api/tour/detail/intro",
                                 "/api/community/posts",
                                 "/api/community/posts/users/*",
+                                "/api/community/posts/tags/*",
                                 "/api/community/posts/*",
                                 "/api/community/posts/*/comments",
                                 "/uploads/**"

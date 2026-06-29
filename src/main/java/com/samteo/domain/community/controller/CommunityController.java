@@ -53,6 +53,16 @@ public class CommunityController {
         return ResponseEntity.ok(ApiResponse.success(communityService.getPostsByUser(profileUserId, viewerId, page, size)));
     }
 
+    @GetMapping("/tags/{tag}")
+    public ResponseEntity<ApiResponse<CommunityPostPageResponse>> getPostsByTag(
+            @AuthenticationPrincipal Long viewerId,
+            @PathVariable String tag,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(communityService.getPostsByTag(tag, viewerId, page, size)));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<CommunityPostPageResponse>> getMyPosts(
             @AuthenticationPrincipal Long userId,

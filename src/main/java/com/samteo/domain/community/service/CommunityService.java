@@ -74,6 +74,21 @@ public class CommunityService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public CommunityPostPageResponse getPostsByTag(String tag, Long viewerId, int page, int size) {
+        String normalizedTag = normalizeTag(tag);
+        Pageable pageable = PageRequest.of(Math.max(page, 0), normalizeSize(size));
+        Page<CommunityPost> posts = postRepository.findByHashtag(normalizedTag, pageable);
+        return new CommunityPostPageResponse(
+                posts.getContent().stream().map(post -> toPostResponse(post, viewerId)).toList(),
+                posts.getNumber(),
+                posts.getSize(),
+                posts.getTotalElements(),
+                posts.getTotalPages(),
+                posts.hasNext()
+        );
+    }
+
     @Transactional
     public CommunityPostResponse createPost(Long userId, String content, List<MultipartFile> images) {
         String normalizedContent = content == null ? "" : content.trim();
@@ -221,5 +236,14 @@ public class CommunityService {
     private int normalizeSize(int size) {
         if (size <= 0) return 12;
         return Math.min(size, 50);
+    }
+
+    private String normalizeTag(String tag) {
+        String normalized = tag == null ? "" : tag.trim().replaceFirst("^#", "");
+        if (normalized.isBlank() || normalized.length() > 100
+                || !normalized.matches("[\\p{L}\\p{N}_]+")) {
+            throw new IllegalArgumentException("올바른 태그를 입력해 주세요.");
+        }
+        return normalized;
     }
 }
