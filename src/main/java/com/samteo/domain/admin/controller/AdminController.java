@@ -10,6 +10,7 @@ import com.samteo.domain.admin.dto.response.AdminUserResponse;
 import com.samteo.domain.admin.dto.response.ApiStatusResponse;
 import com.samteo.domain.admin.service.AdminApiStatusService;
 import com.samteo.domain.admin.service.AdminCommunityService;
+import com.samteo.domain.admin.service.AdminDashboardService;
 import com.samteo.domain.community.dto.CommunityPostUpdateRequest;
 import com.samteo.domain.myplanner.entity.PersonalPlanner;
 import com.samteo.domain.myplanner.repository.PersonalPlannerRepository;
@@ -44,18 +45,14 @@ public class AdminController {
     private final AccommodationRepository accommodationRepository;
     private final AdminApiStatusService adminApiStatusService;
     private final AdminCommunityService adminCommunityService;
+    private final AdminDashboardService adminDashboardService;
 
     // ── 대시보드 ──────────────────────────────────────────────────────────────
 
     @GetMapping("/stats")
-    public ResponseEntity<ApiResponse<AdminStatsResponse>> getStats() {
-        AdminStatsResponse stats = AdminStatsResponse.builder()
-                .totalUsers(userRepository.count())
-                .totalPlanners(personalPlannerRepository.count())
-                .totalJobs(jobRepository.count())
-                .totalAccommodations(accommodationRepository.count())
-                .build();
-        return ResponseEntity.ok(ApiResponse.success(stats));
+    public ResponseEntity<ApiResponse<AdminStatsResponse>> getStats(
+            @RequestParam(defaultValue = "14") int days) {
+        return ResponseEntity.ok(ApiResponse.success(adminDashboardService.getStats(days)));
     }
 
     // ── 회원 관리 ─────────────────────────────────────────────────────────────

@@ -2,7 +2,11 @@ package com.samteo.domain.user.repository;
 
 import com.samteo.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -34,4 +38,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return 조회된 사용자가 있으면 해당 사용자
      */
     Optional<User> findByProviderAndProviderId(String provider, String providerId);
+
+    @Query(value = """
+            SELECT DATE(created_at), COUNT(*)
+            FROM users
+            WHERE created_at >= :from
+            GROUP BY DATE(created_at)
+            ORDER BY DATE(created_at)
+            """, nativeQuery = true)
+    List<Object[]> countDailyCreatedSince(@Param("from") LocalDateTime from);
 }

@@ -2,7 +2,10 @@ package com.samteo.domain.myplanner.repository;
 
 import com.samteo.domain.myplanner.entity.PersonalPlanner;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,4 +32,13 @@ public interface PersonalPlannerRepository extends JpaRepository<PersonalPlanner
      * @return 조건에 맞는 플래너 (Optional)
      */
     Optional<PersonalPlanner> findByIdAndUserId(String id, Long userId);
+
+    @Query(value = """
+            SELECT DATE(created_at), COUNT(*)
+            FROM personal_planners
+            WHERE created_at >= :from
+            GROUP BY DATE(created_at)
+            ORDER BY DATE(created_at)
+            """, nativeQuery = true)
+    List<Object[]> countDailyCreatedSince(@Param("from") LocalDateTime from);
 }

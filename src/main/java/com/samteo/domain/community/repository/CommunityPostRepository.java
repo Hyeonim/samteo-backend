@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.List;
 
 public interface CommunityPostRepository extends JpaRepository<CommunityPost, Long> {
 
@@ -55,4 +57,16 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
             ORDER BY post.createdAt DESC
             """)
     Page<CommunityPost> searchForAdmin(@Param("keyword") String keyword, Pageable pageable);
+
+    long countByDeletedAtIsNull();
+
+    @Query(value = """
+            SELECT DATE(created_at), COUNT(*)
+            FROM community_posts
+            WHERE created_at >= :from
+              AND deleted_at IS NULL
+            GROUP BY DATE(created_at)
+            ORDER BY DATE(created_at)
+            """, nativeQuery = true)
+    List<Object[]> countDailyCreatedSince(@Param("from") LocalDateTime from);
 }
