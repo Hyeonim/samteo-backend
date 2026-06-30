@@ -7,6 +7,7 @@ import lombok.Getter;
 
 import java.time.OffsetDateTime;
 import java.util.Comparator;
+import java.util.List;
 
 @Getter
 @Builder
@@ -18,6 +19,7 @@ public class AdminCommunityPostResponse {
     private String authorEmail;
     private String content;
     private String thumbnailUrl;
+    private List<String> imageUrls;
     private int imageCount;
     private int likeCount;
     private int commentCount;
@@ -25,10 +27,11 @@ public class AdminCommunityPostResponse {
     private OffsetDateTime updatedAt;
 
     public static AdminCommunityPostResponse from(CommunityPost post) {
-        String thumbnailUrl = post.getImages().stream()
-                .min(Comparator.comparingInt(CommunityPostImage::getSortOrder))
+        List<String> imageUrls = post.getImages().stream()
+                .sorted(Comparator.comparingInt(CommunityPostImage::getSortOrder))
                 .map(CommunityPostImage::getImageUrl)
-                .orElse(null);
+                .toList();
+        String thumbnailUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
 
         return AdminCommunityPostResponse.builder()
                 .postId(post.getPostId())
@@ -37,7 +40,8 @@ public class AdminCommunityPostResponse {
                 .authorEmail(post.getUser().getEmail())
                 .content(post.getContent())
                 .thumbnailUrl(thumbnailUrl)
-                .imageCount(post.getImages().size())
+                .imageUrls(imageUrls)
+                .imageCount(imageUrls.size())
                 .likeCount(post.getLikeCount())
                 .commentCount(post.getCommentCount())
                 .createdAt(post.getCreatedAt())
