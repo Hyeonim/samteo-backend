@@ -2,12 +2,15 @@ package com.samteo.domain.admin.controller;
 
 import com.samteo.domain.admin.dto.request.RoleUpdateRequest;
 import com.samteo.domain.admin.dto.response.AdminAccommodationResponse;
+import com.samteo.domain.admin.dto.response.AdminCommunityPostResponse;
 import com.samteo.domain.admin.dto.response.AdminJobResponse;
 import com.samteo.domain.admin.dto.response.AdminPlannerResponse;
 import com.samteo.domain.admin.dto.response.AdminStatsResponse;
 import com.samteo.domain.admin.dto.response.AdminUserResponse;
 import com.samteo.domain.admin.dto.response.ApiStatusResponse;
 import com.samteo.domain.admin.service.AdminApiStatusService;
+import com.samteo.domain.admin.service.AdminCommunityService;
+import com.samteo.domain.community.dto.CommunityPostUpdateRequest;
 import com.samteo.domain.myplanner.entity.PersonalPlanner;
 import com.samteo.domain.myplanner.repository.PersonalPlannerRepository;
 import com.samteo.domain.planner.repository.AccommodationRepository;
@@ -40,6 +43,7 @@ public class AdminController {
     private final JobRepository jobRepository;
     private final AccommodationRepository accommodationRepository;
     private final AdminApiStatusService adminApiStatusService;
+    private final AdminCommunityService adminCommunityService;
 
     // ── 대시보드 ──────────────────────────────────────────────────────────────
 
@@ -142,6 +146,29 @@ public class AdminController {
 
         Page<AdminPlannerResponse> result = planners.map(p -> AdminPlannerResponse.from(p, userMap.get(p.getUserId())));
         return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @GetMapping("/community/posts")
+    public ResponseEntity<ApiResponse<Page<AdminCommunityPostResponse>>> getCommunityPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "") String keyword) {
+        return ResponseEntity.ok(ApiResponse.success(adminCommunityService.getPosts(page, size, keyword)));
+    }
+
+    @PutMapping("/community/posts/{postId}")
+    public ResponseEntity<ApiResponse<AdminCommunityPostResponse>> updateCommunityPost(
+            @PathVariable Long postId,
+            @RequestBody CommunityPostUpdateRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(
+                adminCommunityService.updatePost(postId, request.getContent())
+        ));
+    }
+
+    @DeleteMapping("/community/posts/{postId}")
+    public ResponseEntity<ApiResponse<Void>> deleteCommunityPost(@PathVariable Long postId) {
+        adminCommunityService.deletePost(postId);
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     // ── API 상태 ──────────────────────────────────────────────────────────────

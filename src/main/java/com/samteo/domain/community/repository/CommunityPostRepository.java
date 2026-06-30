@@ -40,4 +40,19 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
 
     @EntityGraph(attributePaths = {"user", "images"})
     Optional<CommunityPost> findByPostIdAndDeletedAtIsNull(Long postId);
+
+    @EntityGraph(attributePaths = {"user"})
+    @Query("""
+            SELECT post
+            FROM CommunityPost post
+            WHERE post.deletedAt IS NULL
+              AND (
+                :keyword = ''
+                OR LOWER(post.content) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(post.user.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(post.user.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
+              )
+            ORDER BY post.createdAt DESC
+            """)
+    Page<CommunityPost> searchForAdmin(@Param("keyword") String keyword, Pageable pageable);
 }
