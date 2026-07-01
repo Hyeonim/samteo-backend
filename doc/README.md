@@ -11,19 +11,38 @@ doc/
   TECH_SPEC.md
   RUN_GUIDE.md
   API/
+    README.md
     AUTH.md
+    ADMIN.md
+    CHAT.md
+    COMMUNITY.md
     HEALTH.md
     JOB.md
+    MY_PLANNER.md
+    NOTIFICATION.md
     PLANNER.md
     REGION.md
+    TOUR.md
     USER.md
+  FUNCTION/
+    README.md
+    PACKAGE_SPEC.md
   SCHEMA/
+    README.md
     ERD.md
+    SERVICE_SCHEMA.md
+  MANUAL/
+    README.md
+    USER_FLOW.md
+    ADMIN_FLOW.md
+    DEVELOPER_FLOW.md
 ```
 
 ## Update Rule
 
 - API가 변경되면 `doc/API` 하위 도메인 문서를 갱신합니다.
+- 기능이 변경되면 `doc/FUNCTION`의 패키지별 명세를 갱신합니다.
 - DB 테이블, 컬럼, 관계, seed data가 변경되면 `doc/SCHEMA/ERD.md`와 `src/main/resources/schema/mariadb` SQL을 함께 갱신합니다.
+- 사용자 또는 관리자 화면 흐름이 변경되면 `doc/MANUAL`을 갱신합니다.
 - 서버 스펙, 배포 방식, 런타임, 외부 연동 정보가 변경되면 `doc/TECH_SPEC.md`를 갱신합니다.
 - 로컬 실행 방법, 환경변수, Docker Compose 사용법이 변경되면 `doc/RUN_GUIDE.md`를 갱신합니다.
