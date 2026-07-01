@@ -24,7 +24,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "https://samteo.org",
                         "https://www.samteo.org"
                 )
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }
