@@ -1,5 +1,6 @@
 package com.samteo.domain.notification.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.samteo.domain.notification.entity.Notification;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,6 +15,7 @@ public class NotificationResponse {
     private String message;
     private String targetType;
     private String targetId;
+    @JsonProperty("read")
     private boolean read;
     private String createdAt;
     private String expiresAt;
