@@ -12,6 +12,7 @@ import com.samteo.domain.community.entity.CommunityPostImage;
 import com.samteo.domain.community.repository.CommunityCommentRepository;
 import com.samteo.domain.community.repository.CommunityLikeRepository;
 import com.samteo.domain.community.repository.CommunityPostRepository;
+import com.samteo.domain.notification.service.NotificationService;
 import com.samteo.domain.user.entity.User;
 import com.samteo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class CommunityService {
     private final CommunityLikeRepository likeRepository;
     private final UserRepository userRepository;
     private final CommunityImageStorageService imageStorageService;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public CommunityPostPageResponse getPosts(Long viewerId, int page, int size) {
@@ -105,6 +107,7 @@ public class CommunityService {
         for (int i = 0; i < validImages.size(); i++) {
             post.addImage(imageStorageService.storeCommunityImage(validImages.get(i), post.getPostId()), i);
         }
+        notificationService.notifyPostCreated(userId, post.getPostId());
         return toPostResponse(post, userId);
     }
 
@@ -137,8 +140,15 @@ public class CommunityService {
     public CommunityPostResponse likePost(Long userId, Long postId) {
         CommunityPost post = findPost(postId);
         if (!likeRepository.existsByPostPostIdAndUserUserId(postId, userId)) {
-            likeRepository.save(CommunityLike.create(post, findUser(userId)));
+            User actor = findUser(userId);
+            likeRepository.save(CommunityLike.create(post, actor));
             post.increaseLikeCount();
+            notificationService.notifyPostLiked(
+                    post.getUser().getUserId(),
+                    actor.getUserId(),
+                    actor.getName(),
+                    postId
+            );
         }
         return toPostResponse(post, userId);
     }
@@ -175,10 +185,18 @@ public class CommunityService {
             throw new IllegalArgumentException("댓글 내용을 입력해 주세요.");
         }
         CommunityPost post = findPost(postId);
+        User actor = findUser(userId);
         CommunityComment comment = commentRepository.save(
-                CommunityComment.create(post, findUser(userId), content.trim())
+                CommunityComment.create(post, actor, content.trim())
         );
         post.increaseCommentCount();
+        notificationService.notifyPostCommented(
+                post.getUser().getUserId(),
+                actor.getUserId(),
+                actor.getName(),
+                postId,
+                comment.getCommentId()
+        );
         return toCommentResponse(comment);
     }
 

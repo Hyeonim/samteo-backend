@@ -5,6 +5,7 @@ import com.samteo.domain.user.dto.response.UserProfileResponse;
 import com.samteo.domain.user.dto.response.UserResponse;
 import com.samteo.domain.community.repository.CommunityPostRepository;
 import com.samteo.domain.authentication.repository.UserAuthIdentityRepository;
+import com.samteo.domain.notification.service.NotificationService;
 import com.samteo.domain.user.entity.User;
 import com.samteo.domain.user.entity.UserFollow;
 import com.samteo.domain.user.repository.UserFollowRepository;
@@ -24,6 +25,7 @@ public class UserService {
     private final UserAuthIdentityRepository userAuthIdentityRepository;
     private final UserFollowRepository userFollowRepository;
     private final CommunityPostRepository communityPostRepository;
+    private final NotificationService notificationService;
 
     /**
      * 현재 인증된 사용자의 프로필 정보를 조회한다.
@@ -79,6 +81,7 @@ public class UserService {
         User following = findUser(followingId);
         if (!userFollowRepository.existsByFollowerUserIdAndFollowingUserId(followerId, followingId)) {
             userFollowRepository.save(UserFollow.create(follower, following));
+            notificationService.notifyFollowed(followingId, followerId, follower.getName());
         }
         return toProfileResponse(following, followerId);
     }

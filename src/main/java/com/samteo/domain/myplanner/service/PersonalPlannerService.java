@@ -12,6 +12,7 @@ import com.samteo.domain.myplanner.entity.PlannerEventType;
 import com.samteo.domain.myplanner.entity.PlannerSchedule;
 import com.samteo.domain.myplanner.repository.PersonalPlannerRepository;
 import com.samteo.domain.myplanner.repository.PlannerDefaultEventTypeRepository;
+import com.samteo.domain.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,7 @@ public class PersonalPlannerService {
     private final PersonalPlannerRepository personalPlannerRepository;
     private final PlannerDefaultEventTypeRepository plannerDefaultEventTypeRepository;
     private final ObjectMapper objectMapper;
+    private final NotificationService notificationService;
 
     /**
      * 현재 사용자가 소유한 플래너 목록 전체를 조회한다.
@@ -72,7 +74,9 @@ public class PersonalPlannerService {
                 toJson(req.getJobs())
         );
         planner.updatePlannerType(req.getPlannerType());
-        return toResponse(personalPlannerRepository.save(planner));
+        PersonalPlanner savedPlanner = personalPlannerRepository.save(planner);
+        notificationService.notifyPlannerCreated(userId, savedPlanner.getId(), savedPlanner.getTitle());
+        return toResponse(savedPlanner);
     }
 
     /**
